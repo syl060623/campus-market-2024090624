@@ -25,8 +25,10 @@ export function deadlineText(deadline: string): string {
   return `还剩${days}天`
 }
 
-export function statusTagType(status: string): string {
-  const map: Record<string, string> = {
+export type TagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
+
+export function statusTagType(status: string): TagType {
+  const map: Record<string, TagType> = {
     '待接单': 'warning',
     '已接单': 'primary',
     '已完成': 'success',

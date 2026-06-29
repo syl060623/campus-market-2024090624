@@ -1,20 +1,31 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ElBreadcrumb, ElBreadcrumbItem, ElSelect, ElOption, ElInput, ElRow, ElCol,
-  ElCard, ElTag, ElPagination, ElEmpty, ElIcon
+  ElCard, ElTag, ElPagination, ElIcon
 } from 'element-plus'
 import { Search, Timer, Location } from '@element-plus/icons-vue'
 import type { LostFoundItem } from '@/types/lost'
+import { getLostFounds } from '@/api/lostFound'
 import { useItemStore } from '@/stores/item'
+import EmptyState from '@/components/EmptyState.vue'
 import { formatTime } from '@/utils/format'
 import { LOCATIONS } from '@/utils/constants'
 
 const router = useRouter()
 const itemStore = useItemStore()
 
-const items = computed(() => itemStore.lostItems)
+const items = ref<LostFoundItem[]>([])
+
+onMounted(async () => {
+  try {
+    const res = await getLostFounds()
+    items.value = res.data
+  } catch {
+    items.value = itemStore.lostItems
+  }
+})
 const typeFilter = ref('')
 const locationFilter = ref('')
 const searchQuery = ref('')
@@ -108,9 +119,7 @@ function handlePageChange(page: number) {
         @current-change="handlePageChange"
       />
     </div>
-    <div class="empty-wrap" v-else>
-      <ElEmpty description="暂无失物招领信息" />
-    </div>
+    <EmptyState v-else text="暂无失物招领信息" />
   </div>
 </template>
 

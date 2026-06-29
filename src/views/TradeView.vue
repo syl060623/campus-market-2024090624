@@ -3,12 +3,14 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   ElBreadcrumb, ElBreadcrumbItem, ElInput, ElSelect, ElOption, ElButton, ElRow, ElCol,
-  ElCard, ElTag, ElPagination, ElAvatar, ElIcon, ElEmpty
+  ElCard, ElTag, ElPagination, ElAvatar, ElIcon
 } from 'element-plus'
 import { Search, Star, StarFilled, Timer, Location } from '@element-plus/icons-vue'
 import type { TradeItem } from '@/types/item'
 import { useFavoriteStore } from '@/stores/favorite'
 import { useItemStore } from '@/stores/item'
+import EmptyState from '@/components/EmptyState.vue'
+import { getTrades } from '@/api/trade'
 import { formatTime } from '@/utils/format'
 import { ITEM_CATEGORIES, ITEM_CONDITIONS, LOCATIONS, TRADE_SORT_OPTIONS } from '@/utils/constants'
 
@@ -17,12 +19,18 @@ const route = useRoute()
 const favoriteStore = useFavoriteStore()
 const itemStore = useItemStore()
 
-const items = computed(() => itemStore.tradeItems)
+const items = ref<TradeItem[]>([])
 const searchQuery = ref('')
 
-onMounted(() => {
+onMounted(async () => {
   const q = route.query.search as string
   if (q) searchQuery.value = q
+  try {
+    const res = await getTrades()
+    items.value = res.data
+  } catch {
+    items.value = itemStore.tradeItems
+  }
 })
 
 watch(() => route.query.search, (q) => {
@@ -155,9 +163,7 @@ function toggleFav(e: Event, id: number) {
         @current-change="handlePageChange"
       />
     </div>
-    <div class="empty-wrap" v-else>
-      <ElEmpty description="没有找到符合条件的商品" />
-    </div>
+    <EmptyState v-else text="没有找到符合条件的商品" />
   </div>
 </template>
 

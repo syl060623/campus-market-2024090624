@@ -1,20 +1,31 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ElBreadcrumb, ElBreadcrumbItem, ElSelect, ElOption, ElInput, ElRow, ElCol,
-  ElCard, ElTag, ElPagination, ElButton, ElEmpty, ElIcon
+  ElCard, ElTag, ElPagination, ElButton, ElIcon
 } from 'element-plus'
 import { Search, Timer, Location } from '@element-plus/icons-vue'
 import type { ErrandTask } from '@/types/task'
+import { getErrands } from '@/api/errand'
 import { useItemStore } from '@/stores/item'
+import EmptyState from '@/components/EmptyState.vue'
 import { formatTime, statusTagType } from '@/utils/format'
 import { TASK_TYPES, LOCATIONS } from '@/utils/constants'
 
 const router = useRouter()
 const itemStore = useItemStore()
 
-const items = computed(() => itemStore.errandTasks)
+const items = ref<ErrandTask[]>([])
+
+onMounted(async () => {
+  try {
+    const res = await getErrands()
+    items.value = res.data
+  } catch {
+    items.value = itemStore.errandTasks
+  }
+})
 const typeFilter = ref('')
 const locationFilter = ref('')
 const searchQuery = ref('')
@@ -106,7 +117,7 @@ function takeOrder(e: Event, id: number) {
               <p class="card-desc">{{ item.content.slice(0, 50) }}{{ item.content.length > 50 ? '...' : '' }}</p>
               <div class="card-footer">
                 <span class="meta-item"><ElIcon :size="12"><Location /></ElIcon>{{ item.deliveryLocation }}</span>
-                <span class="meta-item"><ElIcon :size="12"><Timer /></ElIcon>{{ formatTime(item.expectedTime) }}前</span>
+                <span class="meta-item"><ElIcon :size="12"><Timer /></ElIcon>{{ formatTime(item.expectedTime) }}</span>
                 <span class="reward">¥{{ item.reward }}</span>
                 <ElButton type="primary" size="small" @click="(e) => takeOrder(e, item.id)" v-if="item.status === '待接单'" class="take-btn">接单</ElButton>
               </div>
@@ -125,9 +136,7 @@ function takeOrder(e: Event, id: number) {
         @current-change="handlePageChange"
       />
     </div>
-    <div class="empty-wrap" v-else>
-      <ElEmpty description="暂无跑腿任务" />
-    </div>
+    <EmptyState v-else text="暂无跑腿任务" />
   </div>
 </template>
 

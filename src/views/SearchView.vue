@@ -43,7 +43,7 @@ function doSearch() {
 
 function goToDetail(type: string, id: number) {
   const paths: Record<string, string> = { trade: '/trade/', lost: '/lost-found/', group: '/group-buy/', errand: '/errand/' }
-  router.push(paths[type] + id)
+  const path = paths[type]; if (path) router.push(path + id)
 }
 
 onMounted(() => {

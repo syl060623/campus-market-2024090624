@@ -43,7 +43,8 @@ function goToDetail(type: string, id: number) {
     group: '/group-buy/',
     errand: '/errand/'
   }
-  router.push(paths[type] + id)
+  const path = paths[type]
+  if (path) router.push(path + id)
 }
 </script>
 

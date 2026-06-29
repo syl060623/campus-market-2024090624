@@ -1,20 +1,31 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ElBreadcrumb, ElBreadcrumbItem, ElSelect, ElOption, ElInput, ElRow, ElCol,
-  ElCard, ElTag, ElProgress, ElPagination, ElIcon, ElEmpty
+  ElCard, ElTag, ElProgress, ElPagination, ElIcon
 } from 'element-plus'
 import { Search, Location } from '@element-plus/icons-vue'
 import type { GroupBuyItem } from '@/types/group'
+import { getGroupBuys } from '@/api/groupBuy'
 import { useItemStore } from '@/stores/item'
+import EmptyState from '@/components/EmptyState.vue'
 import { formatTime, deadlineText } from '@/utils/format'
 import { GROUP_TYPES, LOCATIONS } from '@/utils/constants'
 
 const router = useRouter()
 const itemStore = useItemStore()
 
-const items = computed(() => itemStore.groupItems)
+const items = ref<GroupBuyItem[]>([])
+
+onMounted(async () => {
+  try {
+    const res = await getGroupBuys()
+    items.value = res.data
+  } catch {
+    items.value = itemStore.groupItems
+  }
+})
 const typeFilter = ref('')
 const locationFilter = ref('')
 const searchQuery = ref('')
@@ -109,9 +120,7 @@ function handlePageChange(page: number) {
         @current-change="handlePageChange"
       />
     </div>
-    <div class="empty-wrap" v-else>
-      <ElEmpty description="暂无拼单信息" />
-    </div>
+    <EmptyState v-else text="暂无拼单信息" />
   </div>
 </template>
 

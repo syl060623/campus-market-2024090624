@@ -80,7 +80,7 @@ function contactTA() {
           <ElAvatar :size="48" :src="item.publisherAvatar" />
           <div class="publisher-info">
             <span class="publisher-name">{{ item.publisherName }}</span>
-            <span class="publisher-stat">已发布 {{ mockItems.filter(i => i.publisherId === item.publisherId).length }} 件商品</span>
+            <span class="publisher-stat">已发布 {{ itemStore.tradeItems.filter(i => i.publisherId === item!.publisherId).length }} 件商品</span>
           </div>
         </div>
 

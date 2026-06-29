@@ -38,7 +38,7 @@ export const useUserStore = defineStore('user', () => {
       college: params.college,
       creditScore: 80,
       isLoggedIn: true,
-      createdAt: new Date().toISOString().split('T')[0]
+      createdAt: new Date().toISOString().split('T')[0] ?? ''
     }
   }
 
