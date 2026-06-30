@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElSteps, ElStep, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElUpload, ElButton, ElMessage, ElCheckbox, ElIcon } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
@@ -8,6 +8,7 @@ import type { UploadProps, UploadUserFile } from 'element-plus'
 import { useItemStore } from '@/stores/item'
 import { useUserStore } from '@/stores/user'
 import type { TradeItem } from '@/types/item'
+import http from '@/api/http'
 
 const router = useRouter()
 const itemStore = useItemStore()
@@ -30,6 +31,12 @@ const formRef = ref<InstanceType<typeof ElForm> | null>(null)
 
 const categories = [...ITEM_CATEGORIES]
 const conditions = [...ITEM_CONDITIONS]
+
+const previewUrls = ref<string[]>([])
+
+watch(() => form.value.images, () => {
+  previewUrls.value = form.value.images.map(f => f.url || URL.createObjectURL(f.raw!))
+}, { deep: true, immediate: true })
 
 const handleRemove: UploadProps['onRemove'] = () => {
   ElMessage.info('已移除图片')
@@ -63,7 +70,7 @@ function prevStep() {
   }
 }
 
-function submitForm() {
+async function submitForm() {
   const newItem: TradeItem = {
     id: Date.now(),
     title: form.value.name,
@@ -71,7 +78,7 @@ function submitForm() {
     price: form.value.price!,
     originalPrice: form.value.originalPrice || 0,
     condition: form.value.condition,
-    images: form.value.images.map(f => URL.createObjectURL(f.raw!)),
+    images: form.value.images.length > 0 ? form.value.images.map(f => URL.createObjectURL(f.raw!)) : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop'],
     description: form.value.description,
     location: form.value.location,
     contact: form.value.contact,
@@ -82,6 +89,11 @@ function submitForm() {
     status: 'active'
   }
   itemStore.addTradeItem(newItem)
+  try {
+    await http.post('/trades', newItem)
+  } catch {
+    /* json-server may not be running */
+  }
   ElMessage.success('发布成功')
   router.push('/')
 }
@@ -170,6 +182,12 @@ function saveDraft() {
             <p><strong>交易地点：</strong>{{ form.location }}</p>
             <p><strong>联系方式：</strong>{{ form.contact }}</p>
             <p><strong>描述：</strong>{{ form.description || '未填' }}</p>
+            <div class="confirm-images" v-if="form.images.length > 0">
+              <strong>图片：</strong>
+              <div class="image-list">
+                <img v-for="(f, i) in form.images" :key="i" :src="previewUrls[i]" class="preview-img" />
+              </div>
+            </div>
           </div>
           <ElCheckbox v-model="form.agreed" class="agree-checkbox">
             我已阅读并同意 <a href="#" class="link">发布须知</a>
@@ -259,6 +277,30 @@ function saveDraft() {
 
 .confirm-detail p:last-child {
   margin-bottom: 0;
+}
+
+.confirm-images {
+  margin-top: 12px;
+}
+
+.confirm-images strong {
+  font-size: 14px;
+  color: #475569;
+}
+
+.image-list {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.preview-img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
 }
 
 .agree-checkbox {

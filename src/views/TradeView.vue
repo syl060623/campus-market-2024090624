@@ -25,11 +25,17 @@ const searchQuery = ref('')
 onMounted(async () => {
   const q = route.query.search as string
   if (q) searchQuery.value = q
+  items.value = [...itemStore.tradeItems]
   try {
     const res = await getTrades()
-    items.value = res.data
+    const storeIds = new Set(itemStore.tradeItems.map(i => String(i.id)))
+    for (const apiItem of res.data) {
+      if (!storeIds.has(String(apiItem.id))) {
+        items.value.push(apiItem as TradeItem)
+      }
+    }
   } catch {
-    items.value = itemStore.tradeItems
+    /* already have store items as fallback */
   }
 })
 
@@ -77,7 +83,7 @@ const pagedItems = computed(() => {
   return filteredItems.value.slice(start, start + pageSize.value)
 })
 
-function goToDetail(id: number) {
+function goToDetail(id: number | string) {
   router.push(`/trade/${id}`)
 }
 

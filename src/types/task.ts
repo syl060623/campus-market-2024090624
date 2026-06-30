@@ -1,7 +1,7 @@
 export interface ErrandTask {
   id: number
   title: string
-  type: '取快递' | '送东西' | '代购' | '其他'
+  type: string
   content: string
   reward: number
   images: string[]
@@ -12,7 +12,7 @@ export interface ErrandTask {
   publisherName: string
   publisherAvatar: string
   createdAt: string
-  status: '待接单' | '已接单' | '已完成' | '已取消'
+  status: string
   takerId?: number
   takerName?: string
 }

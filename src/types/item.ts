@@ -13,7 +13,7 @@ export interface TradeItem {
   publisherName: string
   publisherAvatar: string
   createdAt: string
-  status: 'active' | 'sold' | 'deleted'
+  status: string
 }
 
 export type ItemCategory = '教材' | '电子产品' | '生活用品' | '体育用品' | '服饰' | '其他'

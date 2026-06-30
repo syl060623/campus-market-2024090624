@@ -3,7 +3,7 @@ import http from './http'
 export interface GroupBuyItem {
   id: number
   title: string
-  type: '餐饮' | '购物' | '出行' | '其他'
+  type: string
   currentCount: number
   targetCount: number
   deadline: string
@@ -14,7 +14,9 @@ export interface GroupBuyItem {
   publisherName: string
   publisherAvatar: string
   createdAt: string
-  status: 'active' | 'full' | 'expired' | 'deleted'
+  status: string
+  publisher: string
+  location: string
 }
 
 export function getGroupBuys() {
@@ -24,3 +26,16 @@ export function getGroupBuys() {
 export function getGroupBuyById(id: number) {
   return http.get<GroupBuyItem>(`/groupBuys/${id}`)
 }
+
+export function createGroupBuy(data: Partial<Omit<GroupBuyItem, 'id'>>) {
+  return http.post<GroupBuyItem>('/groupBuys', data)
+}
+
+export function deleteGroupBuy(id: number) {
+  return http.delete(`/groupBuys/${id}`)
+}
+
+export function updateGroupBuy(id: number, data: Partial<Omit<GroupBuyItem, 'id'>>) {
+  return http.patch<GroupBuyItem>(`/groupBuys/${id}`, data)
+}
+

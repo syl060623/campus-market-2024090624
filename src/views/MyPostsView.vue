@@ -1,82 +1,117 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElTable, ElTableColumn, ElTag, ElButton, ElMessage, ElDialog, ElForm, ElFormItem, ElInput, ElSelect, ElOption } from 'element-plus'
+import { ElTable, ElTableColumn, ElTag, ElButton, ElMessage, ElDialog, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElEmpty } from 'element-plus'
 import { Edit, Delete, Check, Plus } from '@element-plus/icons-vue'
-import { useItemStore } from '@/stores/item'
+import { getTrades, deleteTrade } from '@/api/trade'
+import { getLostFounds, deleteLostFound } from '@/api/lostFound'
+import { getGroupBuys, deleteGroupBuy } from '@/api/groupBuy'
+import { getErrands, deleteErrand } from '@/api/errand'
 import { statusLabel, statusTagType } from '@/utils/format'
 
 const router = useRouter()
 
-interface Post {
+interface PostItem {
   id: number
   title: string
-  type: string
+  apiType: 'trade' | 'lost' | 'group' | 'task'
+  typeLabel: string
   status: string
-  statusType: string
+  rawStatus: string
   price?: number
   reward?: number
   createdAt: string
 }
 
-const itemStore = useItemStore()
+const items = ref<PostItem[]>([])
+const loading = ref(false)
 
-const posts = computed<Post[]>(() =>
-  itemStore.myPublishedPosts.map(p => ({
-    ...p,
-    status: statusLabel(p.status),
-    statusType: statusTagType(p.status),
-    createdAt: p.time,
-  }))
-)
+const typeColors: Record<string, 'primary' | 'success' | 'warning' | 'danger'> = {
+  trade: 'primary',
+  lost: 'danger',
+  group: 'warning',
+  task: 'success',
+}
 
-const typeColors: Record<string, string> = {
-  '二手交易': 'primary',
-  '拼单搭子': 'warning',
-  '跑腿委托': 'success',
-  '失物招领': 'danger',
-  '二手': 'primary',
-  '拼单': 'warning',
-  '跑腿': 'success',
-  '失物': 'danger',
+async function fetchData() {
+  loading.value = true
+  try {
+    const [tradesRes, lostsRes, groupsRes, tasksRes] = await Promise.all([
+      getTrades(),
+      getLostFounds(),
+      getGroupBuys(),
+      getErrands(),
+    ])
+
+    const all: PostItem[] = [
+      ...tradesRes.data.filter(t => t.publisherId === 1).map(t => ({
+        id: t.id, title: t.title, apiType: 'trade' as const, typeLabel: '二手交易',
+        status: statusLabel(t.status), rawStatus: t.status, price: t.price, createdAt: t.createdAt,
+      })),
+      ...lostsRes.data.filter(l => l.publisherId === 1).map(l => ({
+        id: l.id, title: l.itemName, apiType: 'lost' as const, typeLabel: '失物招领',
+        status: statusLabel(l.status), rawStatus: l.status, createdAt: l.createdAt,
+      })),
+      ...groupsRes.data.filter(g => g.publisherId === 1).map(g => ({
+        id: g.id, title: g.title, apiType: 'group' as const, typeLabel: '拼单搭子',
+        status: statusLabel(g.status), rawStatus: g.status, createdAt: g.createdAt,
+      })),
+      ...tasksRes.data.filter(t => t.publisherId === 1).map(t => ({
+        id: t.id, title: t.title, apiType: 'task' as const, typeLabel: '跑腿委托',
+        status: statusLabel(t.status), rawStatus: t.status, reward: t.reward, createdAt: t.createdAt,
+      })),
+    ]
+
+    all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    items.value = all
+  } catch {
+    ElMessage.error('加载发布列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleDelete(row: any) {
+  const item = row as PostItem
+  try {
+    if (item.apiType === 'trade') await deleteTrade(item.id)
+    else if (item.apiType === 'lost') await deleteLostFound(item.id)
+    else if (item.apiType === 'group') await deleteGroupBuy(item.id)
+    else if (item.apiType === 'task') await deleteErrand(item.id)
+
+    items.value = items.value.filter(i => !(i.apiType === item.apiType && i.id === item.id))
+    ElMessage.success('删除成功')
+  } catch {
+    ElMessage.error('删除失败，请重试')
+  }
+}
+
+function formatPrice(row: any) {
+  const item = row as PostItem
+  if (item.price !== undefined) return '¥' + item.price
+  if (item.reward !== undefined) return '¥' + item.reward
+  return '-'
 }
 
 const editDialogVisible = ref(false)
-const editingPost = reactive<Post>({
-  id: 0, title: '', type: '二手交易', status: '已发布', statusType: 'success', createdAt: ''
-})
-const editingIndex = ref(-1)
+const editingItem = ref<PostItem | null>(null)
 
-function handleEdit(post: Post, index: number) {
-  Object.assign(editingPost, post)
-  editingIndex.value = index
+function handleEdit(row: any) {
+  editingItem.value = { ...(row as PostItem) }
   editDialogVisible.value = true
 }
 
 function saveEdit() {
-  if (editingIndex.value >= 0) {
-    posts.value[editingIndex.value] = { ...editingPost }
+  if (!editingItem.value) return
+  const idx = items.value.findIndex(i => i.apiType === editingItem.value!.apiType && i.id === editingItem.value!.id)
+  if (idx >= 0 && items.value[idx]) {
+    items.value[idx]!.title = editingItem.value.title
   }
   editDialogVisible.value = false
   ElMessage.success('修改成功')
 }
 
-function handleDelete(index: number) {
-  posts.value.splice(index, 1)
-  ElMessage.success('删除成功')
-}
-
-function markComplete(index: number) {
-  posts.value[index].status = '已完成'
-  posts.value[index].statusType = 'success'
-  ElMessage.success('已标记为完成')
-}
-
-function formatPrice(row: Post) {
-  if (row.price !== undefined) return '¥' + row.price
-  if (row.reward !== undefined) return '¥' + row.reward
-  return '-'
-}
+onMounted(fetchData)
 </script>
 
 <template>
@@ -86,44 +121,46 @@ function formatPrice(row: Post) {
       <ElButton type="primary" :icon="Plus" @click="router.push('/publish')">发布新商品</ElButton>
     </div>
 
-    <ElTable :data="posts" stripe style="width: 100%" row-key="id">
+    <ElTable v-loading="loading" :data="items" stripe style="width: 100%" row-key="id">
       <ElTableColumn prop="title" label="标题" min-width="260" />
-      <ElTableColumn label="类型" width="80">
-        <template #default="{ row }">
-          <ElTag :type="typeColors[row.type] || ''" size="small">{{ row.type }}</ElTag>
+      <ElTableColumn label="类型" width="100">
+        <template #default="scope">
+          <ElTag :type="typeColors[scope.row.apiType]" size="small">{{ scope.row.typeLabel }}</ElTag>
         </template>
       </ElTableColumn>
       <ElTableColumn label="价格/酬劳" width="100">
-        <template #default="{ row }">
-          {{ formatPrice(row) }}
+        <template #default="scope">
+          {{ formatPrice(scope.row) }}
         </template>
       </ElTableColumn>
       <ElTableColumn label="状态" width="90">
-        <template #default="{ row }">
-          <ElTag :type="row.statusType" size="small">{{ row.status }}</ElTag>
+        <template #default="scope">
+          <ElTag :type="statusTagType(scope.row.rawStatus)" size="small">{{ scope.row.status }}</ElTag>
         </template>
       </ElTableColumn>
-      <ElTableColumn prop="createdAt" label="发布时间" width="110" />
+      <ElTableColumn prop="createdAt" label="发布时间" width="170" />
       <ElTableColumn label="操作" width="240">
-        <template #default="{ row, $index }">
-          <ElButton size="small" text type="primary" :icon="Edit" @click="handleEdit(row, $index)">编辑</ElButton>
-          <ElButton size="small" text type="danger" :icon="Delete" @click="handleDelete($index)">删除</ElButton>
-          <ElButton v-if="row.status !== '已完成'" size="small" text type="success" :icon="Check" @click="markComplete($index)">完成</ElButton>
+        <template #default="scope">
+          <ElButton size="small" text type="primary" :icon="Edit" @click="handleEdit(scope.row)">编辑</ElButton>
+          <ElButton size="small" text type="danger" :icon="Delete" @click="handleDelete(scope.row)">删除</ElButton>
+          <ElButton v-if="scope.row.status !== '已完成'" size="small" text type="success" :icon="Check">完成</ElButton>
         </template>
       </ElTableColumn>
     </ElTable>
 
+    <ElEmpty v-if="!loading && items.length === 0" description="还没有发布过任何内容" />
+
     <ElDialog v-model="editDialogVisible" title="编辑发布" width="500px">
-      <ElForm :model="editingPost" label-width="80px">
+      <ElForm v-if="editingItem" :model="editingItem" label-width="80px">
         <ElFormItem label="标题">
-          <ElInput v-model="editingPost.title" />
+          <ElInput v-model="editingItem.title" />
         </ElFormItem>
         <ElFormItem label="类型">
-          <ElSelect v-model="editingPost.type" style="width: 100%">
-            <ElOption label="二手" value="二手" />
-            <ElOption label="拼单" value="拼单" />
-            <ElOption label="跑腿" value="跑腿" />
-            <ElOption label="失物" value="失物" />
+          <ElSelect v-model="editingItem.apiType" style="width: 100%" disabled>
+            <ElOption label="二手交易" value="trade" />
+            <ElOption label="失物招领" value="lost" />
+            <ElOption label="拼单搭子" value="group" />
+            <ElOption label="跑腿委托" value="task" />
           </ElSelect>
         </ElFormItem>
       </ElForm>

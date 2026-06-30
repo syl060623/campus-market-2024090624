@@ -3,8 +3,9 @@ import http from './http'
 export interface ErrandTask {
   id: number
   title: string
-  type: '取快递' | '送东西' | '代购' | '其他'
+  type: string
   content: string
+  description: string
   reward: number
   images: string[]
   deliveryLocation: string
@@ -14,7 +15,12 @@ export interface ErrandTask {
   publisherName: string
   publisherAvatar: string
   createdAt: string
-  status: '待接单' | '已接单' | '已完成' | '已取消'
+  status: string
+  taskType: string
+  from: string
+  to: string
+  deadline: string
+  publisher: string
   takerId?: number
   takerName?: string
 }
@@ -26,3 +32,16 @@ export function getErrands() {
 export function getErrandById(id: number) {
   return http.get<ErrandTask>(`/errands/${id}`)
 }
+
+export function createErrand(data: Partial<Omit<ErrandTask, 'id'>>) {
+  return http.post<ErrandTask>('/errands', data)
+}
+
+export function deleteErrand(id: number) {
+  return http.delete(`/errands/${id}`)
+}
+
+export function updateErrand(id: number, data: Partial<Omit<ErrandTask, 'id'>>) {
+  return http.patch<ErrandTask>(`/errands/${id}`, data)
+}
+

@@ -16,8 +16,8 @@ const route = useRoute()
 const favoriteStore = useFavoriteStore()
 const itemStore = useItemStore()
 
-const itemId = computed(() => Number(route.params.id))
-const item = computed(() => itemStore.tradeItems.find(i => i.id === itemId.value))
+const itemId = computed(() => route.params.id as string)
+const item = computed(() => itemStore.tradeItems.find(i => String(i.id) === itemId.value))
 
 const relatedItems = computed(() => {
   if (!item.value) return []

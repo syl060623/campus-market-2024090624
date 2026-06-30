@@ -1,7 +1,7 @@
 export interface GroupBuyItem {
   id: number
   title: string
-  type: '餐饮' | '购物' | '出行' | '其他'
+  type: string
   currentCount: number
   targetCount: number
   deadline: string
@@ -12,7 +12,7 @@ export interface GroupBuyItem {
   publisherName: string
   publisherAvatar: string
   createdAt: string
-  status: 'active' | 'full' | 'expired' | 'deleted'
+  status: string
 }
 
 export type GroupBuyCategory = '餐饮' | '购物' | '出行' | '其他'

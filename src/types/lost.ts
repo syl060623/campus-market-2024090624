@@ -1,6 +1,6 @@
 export interface LostFoundItem {
   id: number
-  type: '丢失' | '拾到'
+  type: string
   itemName: string
   images: string[]
   description: string
@@ -11,5 +11,5 @@ export interface LostFoundItem {
   publisherName: string
   publisherAvatar: string
   createdAt: string
-  status: 'active' | 'resolved' | 'deleted'
+  status: string
 }
