@@ -82,9 +82,9 @@ async function submitForm() {
     description: form.value.description,
     location: form.value.location,
     contact: form.value.contact,
-    publisherId: userStore.user.id,
-    publisherName: userStore.user.nickname,
-    publisherAvatar: userStore.user.avatar,
+    publisherId: userStore.currentUser.id,
+    publisherName: userStore.currentUser.name,
+    publisherAvatar: userStore.currentUser.avatar,
     createdAt: new Date().toISOString(),
     status: 'active'
   }

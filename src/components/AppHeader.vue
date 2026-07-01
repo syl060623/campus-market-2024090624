@@ -46,9 +46,11 @@ function goToPublish() {
           <ElButton :icon="Message" circle @click="goTo('/messages')" />
         </ElBadge>
 
+        <span class="user-name">{{ userStore.displayName }}</span>
+
         <ElBadge :is-dot="false">
           <ElDropdown trigger="click" @command="goTo">
-            <ElAvatar :size="36" :src="userStore.avatar" class="user-avatar" />
+            <ElAvatar :size="36" :src="userStore.currentUser.avatar" class="user-avatar" />
             <template #dropdown>
               <ElDropdownMenu>
                 <ElDropdownItem command="/profile">个人中心</ElDropdownItem>
@@ -152,6 +154,12 @@ function goToPublish() {
 
 .action-badge :deep(.el-badge__content) {
   border: none;
+}
+
+.user-name {
+  font-size: 14px;
+  color: #374151;
+  user-select: none;
 }
 
 .user-avatar {

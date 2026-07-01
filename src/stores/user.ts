@@ -1,54 +1,48 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { User, LoginParams, RegisterParams } from '@/types/user'
 
-export const useUserStore = defineStore('user', () => {
-  const user = ref<User>({
-    id: 1,
-    nickname: '张明',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangming',
-    email: 'zhangming@campus.edu',
-    phone: '138****6789',
-    campus: '主校区',
-    college: '计算机科学与技术学院',
-    creditScore: 92,
+export interface CurrentUser {
+  id: number
+  name: string
+  college: string
+  grade: string
+  avatar: string
+  bio: string
+}
+
+export const useUserStore = defineStore('user', {
+  state: () => ({
     isLoggedIn: true,
-    createdAt: '2025-09-01'
-  })
+    currentUser: {
+      id: 1,
+      name: '校园用户',
+      college: '计算机学院',
+      grade: '2023 级',
+      avatar: '',
+      bio: '热爱校园生活，喜欢分享闲置好物。',
+    } as CurrentUser,
+  }),
 
-  const isLoggedIn = computed(() => user.value.isLoggedIn)
-  const nickname = computed(() => user.value.nickname)
-  const avatar = computed(() => user.value.avatar)
-  const creditScore = computed(() => user.value.creditScore)
+  getters: {
+    displayName: (state) => state.currentUser.name,
+    userDescription: (state) => {
+      return `${state.currentUser.college} · ${state.currentUser.grade}`
+    },
+  },
 
-  function login(params: LoginParams) {
-    user.value.isLoggedIn = true
-    user.value.phone = params.phone
-    user.value.nickname = '李华'
-  }
+  actions: {
+    updateProfile(payload: Partial<CurrentUser>) {
+      this.currentUser = {
+        ...this.currentUser,
+        ...payload,
+      }
+    },
 
-  function register(params: RegisterParams) {
-    user.value = {
-      id: Date.now(),
-      nickname: params.nickname,
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=newuser',
-      email: '',
-      phone: params.phone,
-      campus: params.campus,
-      college: params.college,
-      creditScore: 80,
-      isLoggedIn: true,
-      createdAt: new Date().toISOString().split('T')[0] ?? ''
-    }
-  }
+    logout() {
+      this.isLoggedIn = false
+    },
 
-  function logout() {
-    user.value.isLoggedIn = false
-  }
-
-  function updateProfile(data: Partial<User>) {
-    Object.assign(user.value, data)
-  }
-
-  return { user, isLoggedIn, nickname, avatar, creditScore, login, register, logout, updateProfile }
+    login() {
+      this.isLoggedIn = true
+    },
+  },
 })

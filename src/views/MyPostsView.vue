@@ -7,9 +7,11 @@ import { getTrades, deleteTrade } from '@/api/trade'
 import { getLostFounds, deleteLostFound } from '@/api/lostFound'
 import { getGroupBuys, deleteGroupBuy } from '@/api/groupBuy'
 import { getErrands, deleteErrand } from '@/api/errand'
+import { useUserStore } from '@/stores/user'
 import { statusLabel, statusTagType } from '@/utils/format'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 interface PostItem {
   id: number
@@ -44,19 +46,19 @@ async function fetchData() {
     ])
 
     const all: PostItem[] = [
-      ...tradesRes.data.filter(t => t.publisherId === 1).map(t => ({
+      ...tradesRes.data.filter(t => t.publisherId === userStore.currentUser.id).map(t => ({
         id: t.id, title: t.title, apiType: 'trade' as const, typeLabel: '二手交易',
         status: statusLabel(t.status), rawStatus: t.status, price: t.price, createdAt: t.createdAt,
       })),
-      ...lostsRes.data.filter(l => l.publisherId === 1).map(l => ({
+      ...lostsRes.data.filter(l => l.publisherId === userStore.currentUser.id).map(l => ({
         id: l.id, title: l.itemName, apiType: 'lost' as const, typeLabel: '失物招领',
         status: statusLabel(l.status), rawStatus: l.status, createdAt: l.createdAt,
       })),
-      ...groupsRes.data.filter(g => g.publisherId === 1).map(g => ({
+      ...groupsRes.data.filter(g => g.publisherId === userStore.currentUser.id).map(g => ({
         id: g.id, title: g.title, apiType: 'group' as const, typeLabel: '拼单搭子',
         status: statusLabel(g.status), rawStatus: g.status, createdAt: g.createdAt,
       })),
-      ...tasksRes.data.filter(t => t.publisherId === 1).map(t => ({
+      ...tasksRes.data.filter(t => t.publisherId === userStore.currentUser.id).map(t => ({
         id: t.id, title: t.title, apiType: 'task' as const, typeLabel: '跑腿委托',
         status: statusLabel(t.status), rawStatus: t.status, reward: t.reward, createdAt: t.createdAt,
       })),

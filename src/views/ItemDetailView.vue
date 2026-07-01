@@ -90,12 +90,12 @@ function contactTA() {
           <ElButton type="primary" size="large" @click="contactTA" class="action-btn">联系TA</ElButton>
           <ElButton
             size="large"
-            :type="favoriteStore.isFavorited(item.id) ? 'danger' : 'default'"
-            @click="favoriteStore.toggleFavorite(item.id)"
+            :type="favoriteStore.isFavorite('trade', item.id) ? 'danger' : 'default'"
+            @click="favoriteStore.toggleFavorite({ id: item.id, type: 'trade', title: item.title, description: item.description, location: item.location })"
             class="action-btn"
           >
-            <ElIcon><StarFilled v-if="favoriteStore.isFavorited(item.id)" /><Star v-else /></ElIcon>
-            {{ favoriteStore.isFavorited(item.id) ? '已收藏' : '收藏' }}
+            <ElIcon><StarFilled v-if="favoriteStore.isFavorite('trade', item.id)" /><Star v-else /></ElIcon>
+            {{ favoriteStore.isFavorite('trade', item.id) ? '已收藏' : '收藏' }}
           </ElButton>
         </div>
       </div>

@@ -27,7 +27,21 @@ function openChat(conv: { userId: number }) {
   <div class="messages-view">
     <div class="page-header">
       <h2>消息中心</h2>
+      <p>查看系统通知、收藏提醒和互动消息。</p>
     </div>
+
+    <div class="system-messages">
+      <article class="message-card">
+        <h3>欢迎使用校园轻集市</h3>
+        <p>你可以在这里发布二手商品、失物招领、拼单搭子和跑腿委托。</p>
+      </article>
+
+      <article class="message-card">
+        <h3>功能提示</h3>
+        <p>收藏的信息可以在个人中心中查看。</p>
+      </article>
+    </div>
+
     <ElCard class="messages-card" :body-style="{ padding: 0 }">
       <div class="search-bar">
         <ElInput
@@ -82,6 +96,40 @@ function openChat(conv: { userId: number }) {
   font-size: 22px;
   font-weight: 700;
   color: #1E293B;
+}
+
+.page-header p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.system-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.message-card {
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.message-card h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.message-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.6;
 }
 
 .messages-card {

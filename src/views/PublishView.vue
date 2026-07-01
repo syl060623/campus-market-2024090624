@@ -6,10 +6,12 @@ import { createTrade } from '../api/trade'
 import { createLostFound } from '../api/lostFound'
 import { createGroupBuy } from '../api/groupBuy'
 import { createErrand } from '../api/errand'
+import { useUserStore } from '../stores/user'
 
 type PublishType = 'trade' | 'lostFound' | 'groupBuy' | 'errand'
 
 const router = useRouter()
+const userStore = useUserStore()
 const publishType = ref<PublishType>('trade')
 const submitting = ref(false)
 
@@ -181,12 +183,12 @@ async function handleSubmit() {
         description: form.description,
         location: form.location,
         contact: '站内消息联系',
-        publisherId: 1,
-        publisherName: '当前用户',
-        publisherAvatar: '',
+        publisherId: userStore.currentUser.id,
+        publisherName: userStore.currentUser.name,
+        publisherAvatar: userStore.currentUser.avatar,
         createdAt: now,
         status: 'open',
-        publisher: '当前用户',
+        publisher: userStore.displayName,
         publishTime: now,
         image: imageUrls[0] || '',
       })
@@ -205,9 +207,9 @@ async function handleSubmit() {
         location: form.location,
         happenedAt: form.eventTime || now,
         contact: '站内消息联系',
-        publisherId: 1,
-        publisherName: '当前用户',
-        publisherAvatar: '',
+        publisherId: userStore.currentUser.id,
+        publisherName: userStore.currentUser.name,
+        publisherAvatar: userStore.currentUser.avatar,
         createdAt: now,
         status: 'open',
         eventTime: form.eventTime,
@@ -227,12 +229,12 @@ async function handleSubmit() {
         meetLocation: form.location,
         description: form.description,
         images: imageUrls,
-        publisherId: 1,
-        publisherName: '当前用户',
-        publisherAvatar: '',
+        publisherId: userStore.currentUser.id,
+        publisherName: userStore.currentUser.name,
+        publisherAvatar: userStore.currentUser.avatar,
         createdAt: now,
         status: 'open',
-        publisher: '当前用户',
+        publisher: userStore.displayName,
         location: form.location,
       })
 
@@ -251,16 +253,16 @@ async function handleSubmit() {
         deliveryLocation: form.to,
         expectedTime: form.deadline || '尽快',
         contact: '站内消息联系',
-        publisherId: 1,
-        publisherName: '当前用户',
-        publisherAvatar: '',
+        publisherId: userStore.currentUser.id,
+        publisherName: userStore.currentUser.name,
+        publisherAvatar: userStore.currentUser.avatar,
         createdAt: now,
         status: 'open',
         taskType: form.taskType,
         from: form.from,
         to: form.to,
         deadline: form.deadline,
-        publisher: '当前用户',
+        publisher: userStore.displayName,
       })
 
       window.alert('跑腿委托发布成功')

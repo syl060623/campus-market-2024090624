@@ -17,10 +17,8 @@ const form = reactive({
 })
 
 onMounted(() => {
-  const u = userStore.user
-  form.nickname = u.nickname
-  form.phone = u.phone
-  form.email = u.email
+  const u = userStore.currentUser
+  form.nickname = u.name
   form.avatar = u.avatar
 })
 
@@ -114,22 +112,18 @@ function saveSettings() {
             <ElAvatar :size="56" :src="form.avatar" />
             <div class="info-user">
               <span class="info-name">{{ form.nickname || '未设置' }}</span>
-              <span class="info-campus">{{ userStore.user.campus }}</span>
+              <span class="info-campus">{{ userStore.currentUser.college }}</span>
             </div>
           </div>
           <ElDivider />
           <div class="info-stats">
             <div class="info-row">
-              <span class="info-label">信用评分</span>
-              <span class="info-value">{{ userStore.creditScore }}</span>
-            </div>
-            <div class="info-row">
               <span class="info-label">学院</span>
-              <span class="info-value">{{ userStore.user.college }}</span>
+              <span class="info-value">{{ userStore.currentUser.college }}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">注册时间</span>
-              <span class="info-value">{{ userStore.user.createdAt }}</span>
+              <span class="info-label">年级</span>
+              <span class="info-value">{{ userStore.currentUser.grade }}</span>
             </div>
           </div>
         </ElCard>

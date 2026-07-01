@@ -1,36 +1,47 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
 
-export const useFavoriteStore = defineStore('favorite', () => {
-  const favoriteIds = ref<number[]>([1, 5, 8])
+export interface FavoriteItem {
+  id: number
+  type: 'trade' | 'lostFound' | 'groupBuy' | 'errand'
+  title: string
+  description: string
+  location?: string
+}
 
-  const favoriteCount = computed(() => favoriteIds.value.length)
+export const useFavoriteStore = defineStore('favorite', {
+  state: () => ({
+    favorites: [] as FavoriteItem[],
+  }),
 
-  function isFavorited(id: number): boolean {
-    return favoriteIds.value.includes(id)
-  }
+  getters: {
+    favoriteCount: (state) => state.favorites.length,
+  },
 
-  function toggleFavorite(id: number) {
-    const idx = favoriteIds.value.indexOf(id)
-    if (idx > -1) {
-      favoriteIds.value.splice(idx, 1)
-    } else {
-      favoriteIds.value.push(id)
-    }
-  }
+  actions: {
+    isFavorite(type: FavoriteItem['type'], id: number) {
+      return this.favorites.some((item) => item.type === type && item.id === id)
+    },
 
-  function addFavorite(id: number) {
-    if (!favoriteIds.value.includes(id)) {
-      favoriteIds.value.push(id)
-    }
-  }
+    addFavorite(item: FavoriteItem) {
+      const exists = this.isFavorite(item.type, item.id)
 
-  function removeFavorite(id: number) {
-    const idx = favoriteIds.value.indexOf(id)
-    if (idx > -1) {
-      favoriteIds.value.splice(idx, 1)
-    }
-  }
+      if (!exists) {
+        this.favorites.push(item)
+      }
+    },
 
-  return { favoriteIds, favoriteCount, isFavorited, toggleFavorite, addFavorite, removeFavorite }
+    removeFavorite(type: FavoriteItem['type'], id: number) {
+      this.favorites = this.favorites.filter((item) => {
+        return !(item.type === type && item.id === id)
+      })
+    },
+
+    toggleFavorite(item: FavoriteItem) {
+      if (this.isFavorite(item.type, item.id)) {
+        this.removeFavorite(item.type, item.id)
+      } else {
+        this.addFavorite(item)
+      }
+    },
+  },
 })

@@ -31,7 +31,7 @@ const myPosts = computed<PostItem[]>(() => itemStore.myPublishedPosts as PostIte
 
 const allItems = computed(() => itemStore.allItemsForFavorites)
 
-const favoriteItems = computed(() => allItems.value.filter(item => favoriteStore.isFavorited(item.id)))
+const favoriteItems = computed(() => allItems.value.filter(item => favoriteStore.isFavorite('trade', item.id)))
 
 function deletePost(id: number) {
   const idx = itemStore.myPublishedPosts.findIndex((p: any) => p.id === id)
@@ -61,16 +61,14 @@ function saveEdit() {
 }
 
 const settingsForm = ref({
-  nickname: userStore.user.nickname,
-  phone: userStore.user.phone,
-  email: userStore.user.email,
+  nickname: userStore.currentUser.name,
   oldPassword: '',
   newPassword: '',
   confirmPassword: ''
 })
 
 function saveSettings() {
-  userStore.updateProfile({ nickname: settingsForm.value.nickname, phone: settingsForm.value.phone, email: settingsForm.value.email })
+  userStore.updateProfile({ name: settingsForm.value.nickname })
   ElMessage.success('设置已保存')
 }
 </script>
@@ -80,12 +78,11 @@ function saveSettings() {
     <div class="profile-sidebar">
       <ElCard :body-style="{ padding: '28px' }">
         <div class="user-info">
-          <ElAvatar :size="80" :src="userStore.avatar" class="user-avatar" />
-          <h2 class="user-name">{{ userStore.user.nickname }}</h2>
-          <p class="user-campus">{{ userStore.user.campus }} · {{ userStore.user.college }}</p>
-          <div class="user-credit">
-            <ElRate :model-value="Math.floor(userStore.creditScore / 20)" disabled show-text text-color="#F59E0B" />
-            <span class="credit-score">{{ userStore.creditScore }}分</span>
+          <ElAvatar :size="80" :src="userStore.currentUser.avatar" class="user-avatar" />
+          <h2 class="user-name">{{ userStore.displayName }}</h2>
+          <p class="user-campus">{{ userStore.userDescription }}</p>
+          <div class="user-bio">
+            <p>{{ userStore.currentUser.bio }}</p>
           </div>
         </div>
         <ElDivider />
@@ -99,7 +96,7 @@ function saveSettings() {
             <span class="stat-label">收藏</span>
           </div>
           <div class="stat-item">
-            <span class="stat-value">{{ userStore.creditScore }}</span>
+            <span class="stat-value">100</span>
             <span class="stat-label">信用</span>
           </div>
         </div>
@@ -154,7 +151,7 @@ function saveSettings() {
                     <span v-if="item.reward" class="price">¥{{ item.reward }}</span>
                     <ElTag size="small">{{ item.type }}</ElTag>
                   </div>
-                  <ElButton size="small" text type="primary" @click="favoriteStore.toggleFavorite(item.id)">
+                  <ElButton size="small" text type="primary" @click="favoriteStore.toggleFavorite({ id: item.id, type: 'trade', title: item.title, description: item.description, location: item.location })">
                     取消收藏
                   </ElButton>
                 </div>
@@ -178,7 +175,7 @@ function saveSettings() {
               </ElFormItem>
               <ElFormItem label="头像">
                 <ElUpload action="#" list-type="picture-card" :auto-upload="false">
-                  <ElAvatar :size="80" :src="userStore.avatar" />
+                  <ElAvatar :size="80" :src="userStore.currentUser.avatar" />
                 </ElUpload>
               </ElFormItem>
               <ElDivider />
@@ -255,17 +252,15 @@ function saveSettings() {
   margin-bottom: 8px;
 }
 
-.user-credit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+.user-bio {
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
 }
 
-.credit-score {
-  font-size: 14px;
-  font-weight: 600;
-  color: #F59E0B;
+.user-bio p {
+  margin: 0;
 }
 
 .user-stats {

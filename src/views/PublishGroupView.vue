@@ -71,9 +71,9 @@ function submitForm() {
     meetLocation: form.value.meetupPlace,
     description: form.value.description,
     images: form.value.images.map(f => URL.createObjectURL(f.raw!)),
-    publisherId: userStore.user.id,
-    publisherName: userStore.user.nickname,
-    publisherAvatar: userStore.user.avatar,
+    publisherId: userStore.currentUser.id,
+    publisherName: userStore.currentUser.name,
+    publisherAvatar: userStore.currentUser.avatar,
     createdAt: new Date().toISOString(),
     status: 'active'
   }

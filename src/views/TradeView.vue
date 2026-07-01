@@ -5,7 +5,7 @@ import {
   ElBreadcrumb, ElBreadcrumbItem, ElInput, ElSelect, ElOption, ElButton, ElRow, ElCol,
   ElCard, ElTag, ElPagination, ElAvatar, ElIcon
 } from 'element-plus'
-import { Search, Star, StarFilled, Timer, Location } from '@element-plus/icons-vue'
+import { Search, Timer, Location } from '@element-plus/icons-vue'
 import type { TradeItem } from '@/types/item'
 import { useFavoriteStore } from '@/stores/favorite'
 import { useItemStore } from '@/stores/item'
@@ -92,9 +92,14 @@ function handlePageChange(page: number) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function toggleFav(e: Event, id: number) {
-  e.stopPropagation()
-  favoriteStore.toggleFavorite(id)
+function toggleFav(item: TradeItem) {
+  favoriteStore.toggleFavorite({
+    id: item.id,
+    type: 'trade',
+    title: item.title,
+    description: item.description,
+    location: item.location,
+  })
 }
 </script>
 
@@ -136,9 +141,6 @@ function toggleFav(e: Event, id: number) {
         <ElCard class="item-card" :body-style="{ padding: 0 }" shadow="hover" @click="goToDetail(item.id)">
           <div class="card-image">
             <img :src="item.images[0]" :alt="item.title" />
-            <button class="fav-btn" :class="{ active: favoriteStore.isFavorited(item.id) }" @click="(e) => toggleFav(e, item.id)">
-              <ElIcon :size="18"><StarFilled v-if="favoriteStore.isFavorited(item.id)" /><Star v-else /></ElIcon>
-            </button>
           </div>
           <div class="card-body">
             <ElTag :type="item.condition === '全新' ? 'success' : item.condition === '九成新' ? 'primary' : 'warning'" size="small" class="condition-tag">{{ item.condition }}</ElTag>
@@ -151,9 +153,14 @@ function toggleFav(e: Event, id: number) {
               <span class="meta-item"><ElIcon :size="12"><Location /></ElIcon>{{ item.location }}</span>
               <span class="meta-item"><ElIcon :size="12"><Timer /></ElIcon>{{ formatTime(item.createdAt) }}</span>
             </div>
-            <div class="card-publisher">
-              <ElAvatar :size="24" :src="item.publisherAvatar" />
-              <span class="publisher-name">{{ item.publisherName }}</span>
+            <div class="card-footer">
+              <div class="card-publisher">
+                <ElAvatar :size="24" :src="item.publisherAvatar" />
+                <span class="publisher-name">{{ item.publisherName }}</span>
+              </div>
+              <button class="favorite-btn" @click.stop="toggleFav(item)">
+                {{ favoriteStore.isFavorite('trade', item.id) ? '已收藏' : '收藏' }}
+              </button>
             </div>
           </div>
         </ElCard>
@@ -261,32 +268,6 @@ function toggleFav(e: Event, id: number) {
   object-fit: cover;
 }
 
-.fav-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #94A3B8;
-}
-
-.fav-btn.active {
-  color: #EF4444;
-  background: rgba(239,68,68,0.1);
-}
-
-.fav-btn:hover {
-  transform: scale(1.1);
-}
-
 .card-body {
   padding: 12px 14px 14px;
 }
@@ -341,17 +322,38 @@ function toggleFav(e: Event, id: number) {
   color: #94A3B8;
 }
 
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid #F1F5F9;
+}
+
 .card-publisher {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding-top: 8px;
-  border-top: 1px solid #F1F5F9;
 }
 
 .publisher-name {
   font-size: 12px;
   color: #64748B;
+}
+
+.favorite-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.favorite-btn:hover {
+  background: #e5e7eb;
 }
 
 .pagination-wrap {
