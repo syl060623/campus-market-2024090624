@@ -1,4 +1,26 @@
 {
+  "users": [
+    {
+      "id": "1",
+      "username": "student",
+      "password": "123456",
+      "name": "校园用户",
+      "college": "计算机学院",
+      "grade": "2023级",
+      "avatar": "",
+      "bio": "热爱校园生活，喜欢分享闲置好物。"
+    },
+    {
+      "username": "nihao",
+      "password": "123456",
+      "name": "宋",
+      "college": "计算机学院",
+      "grade": "2024级",
+      "avatar": "",
+      "bio": "这个同学还没有填写个人简介。",
+      "id": "GcmbSQ2sMLg"
+    }
+  ],
   "trades": [
     {
       "id": "1",
@@ -227,94 +249,6 @@
       "publisherAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=lisi",
       "createdAt": "2026-06-17T09:30:00",
       "status": "active"
-    },
-    {
-      "title": "xrz",
-      "category": "哈哈哈哈",
-      "price": 12,
-      "originalPrice": 0,
-      "condition": "全新",
-      "images": [
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop"
-      ],
-      "description": "好",
-      "location": "成龙",
-      "contact": "站内消息联系",
-      "publisherId": 1,
-      "publisherName": "当前用户",
-      "publisherAvatar": "",
-      "createdAt": "2026-06-30 07:47",
-      "status": "open",
-      "publisher": "当前用户",
-      "publishTime": "2026-06-30 07:47",
-      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-      "id": "QWCCrM0cT0M"
-    },
-    {
-      "title": "syl",
-      "category": "鼻涕大啊汪",
-      "price": 1,
-      "originalPrice": 0,
-      "condition": "九成新",
-      "images": [
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop"
-      ],
-      "description": "鼻涕大王",
-      "location": "实验室408",
-      "contact": "站内消息联系",
-      "publisherId": 1,
-      "publisherName": "当前用户",
-      "publisherAvatar": "",
-      "createdAt": "2026-06-30 07:49",
-      "status": "open",
-      "publisher": "当前用户",
-      "publishTime": "2026-06-30 07:49",
-      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-      "id": "tvqXGR1J8Gw"
-    },
-    {
-      "title": "qjy",
-      "category": "迟到大王1",
-      "price": 1,
-      "originalPrice": 0,
-      "condition": "八成新",
-      "images": [
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop"
-      ],
-      "description": "迟到大王",
-      "location": "实验室310",
-      "contact": "站内消息联系",
-      "publisherId": 1,
-      "publisherName": "当前用户",
-      "publisherAvatar": "",
-      "createdAt": "2026-06-30 07:53",
-      "status": "open",
-      "publisher": "当前用户",
-      "publishTime": "2026-06-30 07:53",
-      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-      "id": "GBgwnWrRzsw"
-    },
-    {
-      "title": "zyh",
-      "category": "迟到大王2",
-      "price": 1,
-      "originalPrice": 0,
-      "condition": "正常使用痕迹",
-      "images": [
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop"
-      ],
-      "description": "耶耶耶",
-      "location": "实验室310",
-      "contact": "站内消息联系",
-      "publisherId": 1,
-      "publisherName": "当前用户",
-      "publisherAvatar": "",
-      "createdAt": "2026-06-30 07:54",
-      "status": "open",
-      "publisher": "当前用户",
-      "publishTime": "2026-06-30 07:54",
-      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-      "id": "nm_CzHM5mIA"
     }
   ],
   "lostFounds": [

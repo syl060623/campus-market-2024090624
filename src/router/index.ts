@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: () => import('../views/HomeView.vue') },
@@ -22,8 +24,23 @@ const routes = [
   { path: '/profile/posts', name: 'MyPosts', component: () => import('../views/MyPostsView.vue') },
   { path: '/profile/favorites', name: 'Favorites', component: () => import('../views/FavoritesView.vue') },
   { path: '/profile/settings', name: 'Settings', component: () => import('../views/SettingsView.vue') },
-  { path: '/login', name: 'Login', component: () => import('../views/LoginView.vue') },
-  { path: '/register', name: 'Register', component: () => import('../views/RegisterView.vue') },
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginView,
+    meta: {
+      title: '登录',
+    },
+  },
+  { path: '/user', name: 'UserCenter', component: () => import('../views/UserCenterView.vue') },
+  {
+    path: '/register',
+    name: 'register',
+    component: RegisterView,
+    meta: {
+      title: '注册',
+    },
+  },
   { path: '/admin', name: 'AdminDashboard', component: () => import('../views/AdminDashboardView.vue') },
   { path: '/admin/review', name: 'AdminReview', component: () => import('../views/AdminReviewView.vue') },
 ]

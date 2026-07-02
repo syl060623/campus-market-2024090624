@@ -1,48 +1,69 @@
 import { defineStore } from 'pinia'
+import { getUsers, updateUser, type User } from '../api/user'
 
-export interface CurrentUser {
-  id: number
-  name: string
-  college: string
-  grade: string
-  avatar: string
-  bio: string
-}
+const STORAGE_KEY = 'campus-market-current-user'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    isLoggedIn: true,
-    currentUser: {
-      id: 1,
-      name: '校园用户',
-      college: '计算机学院',
-      grade: '2023 级',
-      avatar: '',
-      bio: '热爱校园生活，喜欢分享闲置好物。',
-    } as CurrentUser,
+    isLoggedIn: false,
+    currentUser: null as User | null,
   }),
 
   getters: {
-    displayName: (state) => state.currentUser.name,
+    displayName: (state) => state.currentUser?.name || '未登录',
     userDescription: (state) => {
+      if (!state.currentUser) {
+        return '请先登录'
+      }
+
       return `${state.currentUser.college} · ${state.currentUser.grade}`
     },
   },
 
   actions: {
-    updateProfile(payload: Partial<CurrentUser>) {
-      this.currentUser = {
-        ...this.currentUser,
-        ...payload,
+    async login(username: string, password: string) {
+      const res = await getUsers()
+
+      const user = res.data.find((item) => {
+        return item.username === username && item.password === password
+      })
+
+      if (!user) {
+        throw new Error('账号或密码错误')
+      }
+
+      this.currentUser = user
+      this.isLoggedIn = true
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
+    },
+
+    restoreLogin() {
+      const raw = localStorage.getItem(STORAGE_KEY)
+
+      if (!raw) {
+        return
+      }
+
+      try {
+        this.currentUser = JSON.parse(raw)
+        this.isLoggedIn = true
+      } catch (error) {
+        console.error(error)
+        localStorage.removeItem(STORAGE_KEY)
       }
     },
 
-    logout() {
-      this.isLoggedIn = false
+    async updateProfile(data: Partial<User>) {
+      if (!this.currentUser || !this.currentUser.id) return
+      const res = await updateUser(this.currentUser.id, data)
+      this.currentUser = { ...this.currentUser, ...res.data }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.currentUser))
     },
 
-    login() {
-      this.isLoggedIn = true
+    logout() {
+      this.currentUser = null
+      this.isLoggedIn = false
+      localStorage.removeItem(STORAGE_KEY)
     },
   },
 })

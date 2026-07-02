@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElCard, ElAvatar, ElTabs, ElTabPane, ElTag, ElButton, ElTable, ElTableColumn, ElForm, ElFormItem, ElInput, ElUpload, ElRow, ElCol, ElDivider, ElRate, ElMessage, ElDialog, ElEmpty } from 'element-plus'
+import { ElCard, ElAvatar, ElTabs, ElTabPane, ElTag, ElButton, ElTable, ElTableColumn, ElForm, ElFormItem, ElInput, ElUpload, ElRow, ElCol, ElDivider, ElMessage, ElDialog, ElEmpty } from 'element-plus'
 import { Edit, Delete } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useFavoriteStore } from '@/stores/favorite'
@@ -61,14 +61,15 @@ function saveEdit() {
 }
 
 const settingsForm = ref({
-  nickname: userStore.currentUser.name,
+  nickname: userStore.currentUser?.name || '',
+  phone: '',
+  email: '',
   oldPassword: '',
   newPassword: '',
   confirmPassword: ''
 })
 
 function saveSettings() {
-  userStore.updateProfile({ name: settingsForm.value.nickname })
   ElMessage.success('设置已保存')
 }
 </script>
@@ -78,11 +79,11 @@ function saveSettings() {
     <div class="profile-sidebar">
       <ElCard :body-style="{ padding: '28px' }">
         <div class="user-info">
-          <ElAvatar :size="80" :src="userStore.currentUser.avatar" class="user-avatar" />
+          <ElAvatar :size="80" :src="userStore.currentUser?.avatar || ''" class="user-avatar" />
           <h2 class="user-name">{{ userStore.displayName }}</h2>
           <p class="user-campus">{{ userStore.userDescription }}</p>
           <div class="user-bio">
-            <p>{{ userStore.currentUser.bio }}</p>
+            <p>{{ userStore.currentUser?.bio }}</p>
           </div>
         </div>
         <ElDivider />
@@ -131,7 +132,7 @@ function saveSettings() {
             </ElTableColumn>
             <ElTableColumn label="操作" width="200">
               <template #default="{ row }">
-                <ElButton size="small" :icon="Edit" @click="openEdit(row)">编辑</ElButton>
+                <ElButton size="small" :icon="Edit" @click="openEdit(row as PostItem)">编辑</ElButton>
                 <ElButton size="small" :icon="Delete" type="danger" @click="deletePost(row.id)">删除</ElButton>
                 <ElButton v-if="row.status === 'active'" size="small" type="success" @click="completePost(row.id)">完成</ElButton>
               </template>
@@ -175,7 +176,7 @@ function saveSettings() {
               </ElFormItem>
               <ElFormItem label="头像">
                 <ElUpload action="#" list-type="picture-card" :auto-upload="false">
-                  <ElAvatar :size="80" :src="userStore.currentUser.avatar" />
+                  <ElAvatar :size="80" :src="userStore.currentUser?.avatar || ''" />
                 </ElUpload>
               </ElFormItem>
               <ElDivider />

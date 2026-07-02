@@ -1,241 +1,190 @@
+<template>
+  <section class="auth-page">
+    <div class="auth-card">
+      <h1>注册校园轻集市账号</h1>
+      <p class="desc">创建账号后，可以发布信息、收藏内容并进入个人中心。</p>
+
+      <form class="auth-form" @submit.prevent="handleRegister">
+        <FormField label="用户名" required :error="errors.username">
+          <input v-model.trim="form.username" type="text" placeholder="请输入用户名" />
+        </FormField>
+
+        <FormField label="密码" required :error="errors.password">
+          <input v-model.trim="form.password" type="password" placeholder="请输入密码" />
+        </FormField>
+
+        <FormField label="姓名" required :error="errors.name">
+          <input v-model.trim="form.name" type="text" placeholder="请输入显示名称" />
+        </FormField>
+
+        <FormField label="学院" required :error="errors.college">
+          <input v-model.trim="form.college" type="text" placeholder="例如：计算机学院" />
+        </FormField>
+
+        <FormField label="年级" required :error="errors.grade">
+          <input v-model.trim="form.grade" type="text" placeholder="例如：2023级" />
+        </FormField>
+
+        <button class="primary" type="submit" :disabled="submitting">
+          {{ submitting ? '注册中...' : '注册' }}
+        </button>
+      </form>
+
+      <p class="switch">
+        已有账号？
+        <RouterLink to="/login">去登录</RouterLink>
+      </p>
+    </div>
+  </section>
+</template>
+
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import type { RegisterParams } from '@/types/user'
-import { ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElButton, ElCard, ElMessage, ElDivider } from 'element-plus'
-import { User, Lock, Phone, School, OfficeBuilding } from '@element-plus/icons-vue'
+
+import FormField from '../components/FormField.vue'
+import { createUser, getUsers } from '../api/user'
 
 const router = useRouter()
-const userStore = useUserStore()
+const submitting = ref(false)
 
 const form = reactive({
-  nickname: '',
-  phone: '',
+  username: '',
   password: '',
-  confirmPassword: '',
-  campus: '',
+  name: '',
   college: '',
+  grade: '',
 })
 
-const loading = ref(false)
+const errors = reactive<Record<string, string>>({})
 
-const campusOptions = ['主校区', '东校区', '西校区', '南校区', '北校区']
-const collegeOptions = [
-  '计算机科学与技术学院',
-  '电子信息工程学院',
-  '数学与统计学院',
-  '外国语学院',
-  '经济管理学院',
-  '人文学院',
-  '艺术与设计学院',
-  '材料科学与工程学院',
-  '机械工程学院',
-  '土木工程学院',
-]
+function clearErrors() {
+  Object.keys(errors).forEach((key) => {
+    errors[key] = ''
+  })
+}
 
-function handleRegister() {
-  if (!form.nickname.trim() || !form.phone.trim() || !form.password.trim()) {
-    ElMessage.warning('请填写完整信息')
-    return
+function validateForm() {
+  clearErrors()
+
+  if (!form.username) {
+    errors.username = '请输入用户名'
   }
-  if (form.password !== form.confirmPassword) {
-    ElMessage.error('两次密码输入不一致')
-    return
+
+  if (!form.password) {
+    errors.password = '请输入密码'
+  } else if (form.password.length < 6) {
+    errors.password = '密码长度不能少于 6 位'
   }
-  if (!form.campus) {
-    ElMessage.warning('请选择校区')
-    return
+
+  if (!form.name) {
+    errors.name = '请输入姓名'
   }
+
   if (!form.college) {
-    ElMessage.warning('请选择学院')
+    errors.college = '请输入学院'
+  }
+
+  if (!form.grade) {
+    errors.grade = '请输入年级'
+  }
+
+  return Object.values(errors).every((message) => !message)
+}
+
+async function handleRegister() {
+  if (!validateForm()) {
     return
   }
-  loading.value = true
+
+  submitting.value = true
+
   try {
-    const params: RegisterParams = {
-      nickname: form.nickname,
-      phone: form.phone,
-      password: form.password,
-      campus: form.campus,
-      college: form.college,
+    const res = await getUsers()
+    const exists = res.data.some((user) => user.username === form.username)
+
+    if (exists) {
+      errors.username = '用户名已存在'
+      return
     }
-    userStore.register(params)
-    ElMessage.success('注册成功')
-    router.push('/')
-  } catch {
-    ElMessage.error('注册失败，请重试')
+
+    await createUser({
+      username: form.username,
+      password: form.password,
+      name: form.name,
+      college: form.college,
+      grade: form.grade,
+      avatar: '',
+      bio: '这个同学还没有填写个人简介。',
+    })
+
+    window.alert('注册成功，请登录')
+    router.push('/login')
+  } catch (error) {
+    console.error(error)
+    window.alert('注册失败，请检查 Mock 服务是否正常运行')
   } finally {
-    loading.value = false
+    submitting.value = false
   }
 }
 </script>
 
-<template>
-  <div class="register-view">
-    <div class="register-container">
-      <div class="register-decoration">
-        <div class="decoration-content">
-          <ElIcon :size="64" color="#fff"><School /></ElIcon>
-          <h1 class="decoration-title">加入校园轻集市</h1>
-          <p class="decoration-desc">开启你的校园交易之旅</p>
-        </div>
-      </div>
-      <ElCard class="register-card" :body-style="{ padding: '40px' }">
-        <h2 class="register-title">创建账号</h2>
-        <p class="register-subtitle">填写信息完成注册</p>
-        <ElForm :model="form" label-width="0" class="register-form" @keyup.enter="handleRegister">
-          <ElFormItem>
-            <ElInput
-              v-model="form.nickname"
-              placeholder="昵称"
-              size="large"
-              :prefix-icon="User"
-            />
-          </ElFormItem>
-          <ElFormItem>
-            <ElInput
-              v-model="form.phone"
-              placeholder="手机号"
-              size="large"
-              :prefix-icon="Phone"
-            />
-          </ElFormItem>
-          <ElFormItem>
-            <ElInput
-              v-model="form.password"
-              type="password"
-              placeholder="密码"
-              size="large"
-              show-password
-              :prefix-icon="Lock"
-            />
-          </ElFormItem>
-          <ElFormItem>
-            <ElInput
-              v-model="form.confirmPassword"
-              type="password"
-              placeholder="确认密码"
-              size="large"
-              show-password
-              :prefix-icon="Lock"
-            />
-          </ElFormItem>
-          <ElFormItem>
-            <ElSelect v-model="form.campus" placeholder="选择校区" size="large" :prefix-icon="School">
-              <ElOption v-for="c in campusOptions" :key="c" :label="c" :value="c" />
-            </ElSelect>
-          </ElFormItem>
-          <ElFormItem>
-            <ElSelect v-model="form.college" placeholder="选择学院" size="large" :prefix-icon="OfficeBuilding">
-              <ElOption v-for="c in collegeOptions" :key="c" :label="c" :value="c" />
-            </ElSelect>
-          </ElFormItem>
-          <ElFormItem>
-            <ElButton
-              type="primary"
-              size="large"
-              :loading="loading"
-              class="register-btn"
-              @click="handleRegister"
-            >
-              注册
-            </ElButton>
-          </ElFormItem>
-        </ElForm>
-        <ElDivider>
-          <span style="color: #94A3B8; font-size: 13px;">已有账号？</span>
-        </ElDivider>
-        <div class="login-link">
-          <ElButton text type="primary" size="large" @click="router.push('/login')">
-            返回登录
-          </ElButton>
-        </div>
-      </ElCard>
-    </div>
-  </div>
-</template>
-
 <style scoped>
-.register-view {
+.auth-page {
   min-height: calc(100vh - 120px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 0;
+  display: grid;
+  place-items: center;
 }
 
-.register-container {
-  display: flex;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  max-width: 800px;
-  width: 100%;
-}
-
-.register-decoration {
-  flex: 1;
-  background: linear-gradient(135deg, #3B82F6 0%, #14B8A6 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 48px;
-  min-height: 500px;
-}
-
-.decoration-content {
-  text-align: center;
-  color: #fff;
-}
-
-.decoration-title {
-  font-size: 28px;
-  font-weight: 800;
-  margin-top: 16px;
-  margin-bottom: 8px;
-}
-
-.decoration-desc {
-  font-size: 14px;
-  opacity: 0.85;
-}
-
-.register-card {
+.auth-card {
   width: 420px;
-  border-radius: 0;
-  border: none;
+  padding: 28px;
+  border-radius: 16px;
+  background: #fff;
 }
 
-.register-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1E293B;
-  margin-bottom: 4px;
+.auth-card h1 {
+  margin: 0 0 8px;
 }
 
-.register-subtitle {
+.desc {
+  margin: 0 0 20px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
   font-size: 14px;
-  color: #94A3B8;
-  margin-bottom: 28px;
 }
 
-.register-form :deep(.el-input__wrapper) {
+.primary {
+  border: none;
   border-radius: 8px;
-}
-
-.register-form :deep(.el-select) {
-  width: 100%;
-}
-
-.register-btn {
-  width: 100%;
-  border-radius: 8px;
-  height: 44px;
+  padding: 11px 16px;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
   font-size: 15px;
 }
 
-.login-link {
+.primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.switch {
+  margin: 18px 0 0;
   text-align: center;
+  color: #6b7280;
 }
 </style>

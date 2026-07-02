@@ -61,6 +61,7 @@ function prevStep() {
 }
 
 function submitForm() {
+  if (!userStore.currentUser) return
   const newItem: GroupBuyItem = {
     id: Date.now(),
     title: form.value.topic,
@@ -71,9 +72,9 @@ function submitForm() {
     meetLocation: form.value.meetupPlace,
     description: form.value.description,
     images: form.value.images.map(f => URL.createObjectURL(f.raw!)),
-    publisherId: userStore.currentUser.id,
-    publisherName: userStore.currentUser.name,
-    publisherAvatar: userStore.currentUser.avatar,
+    publisherId: userStore.currentUser.id!,
+    publisherName: userStore.currentUser.name!,
+    publisherAvatar: userStore.currentUser.avatar!,
     createdAt: new Date().toISOString(),
     status: 'active'
   }

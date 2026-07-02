@@ -28,7 +28,7 @@ interface AnnouncementItem {
   title: string
   date: string
   tag: string
-  type: string
+  type: 'primary' | 'success' | 'warning' | 'info' | 'danger'
 }
 
 const iconMap: Record<string, Component> = { UserFilled, Goods, Clock, WarningFilled }
@@ -62,7 +62,7 @@ const announcements: AnnouncementItem[] = [
   { title: '新增举报反馈机制说明', date: '2026-06-15', tag: '更新', type: 'info' },
 ]
 
-function statusType(status: string) {
+function statusType(status: string): 'success' | 'warning' | 'info' {
   if (status.includes('通过') || status.includes('完成')) return 'success'
   if (status.includes('待处理') || status.includes('审核')) return 'warning'
   return 'info'

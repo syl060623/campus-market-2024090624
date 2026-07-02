@@ -1,5 +1,3 @@
-import type { ErrandTask } from '@/types/task'
-import type { GroupBuyItem } from '@/types/group'
 
 export function formatTime(dateStr: string): string {
   const now = Date.now()

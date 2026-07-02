@@ -61,6 +61,7 @@ function prevStep() {
 }
 
 function submitForm() {
+  if (!userStore.currentUser) return
   const newItem: ErrandTask = {
     id: Date.now(),
     title: form.value.content,
@@ -71,9 +72,9 @@ function submitForm() {
     deliveryLocation: form.value.deliveryPlace,
     expectedTime: form.value.deadline?.toISOString() || new Date().toISOString(),
     contact: form.value.contact,
-    publisherId: userStore.currentUser.id,
-    publisherName: userStore.currentUser.name,
-    publisherAvatar: userStore.currentUser.avatar,
+    publisherId: userStore.currentUser.id!,
+    publisherName: userStore.currentUser.name!,
+    publisherAvatar: userStore.currentUser.avatar!,
     createdAt: new Date().toISOString(),
     status: '待接单'
   }

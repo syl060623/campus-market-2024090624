@@ -162,6 +162,12 @@ function getCurrentTime() {
 }
 
 async function handleSubmit() {
+  if (!userStore.isLoggedIn || !userStore.currentUser) {
+    window.alert('请先登录后再发布信息')
+    router.push('/login')
+    return
+  }
+
   if (!validateForm()) {
     return
   }
@@ -270,7 +276,7 @@ async function handleSubmit() {
     }
   } catch (error) {
     console.error(error)
-    window.alert('发布失败，请检查 Mock 服务是否正常运行')
+    window.alert('发布失败，请确认 JSON Server 已启动，并检查表单数据是否完整。')
   } finally {
     submitting.value = false
   }
@@ -295,11 +301,11 @@ async function handleSubmit() {
       </FormField>
 
       <FormField label="标题" required :error="errors.title">
-        <input v-model.trim="form.title" type="text" placeholder="请输入标题" />
+        <input v-model.trim="form.title" type="text" placeholder="输入标题，例如：出售二手自行车" />
       </FormField>
 
       <FormField label="地点" required :error="errors.location">
-        <input v-model.trim="form.location" type="text" placeholder="请输入地点" />
+        <input v-model.trim="form.location" type="text" placeholder="如：北区食堂、图书馆三楼" />
       </FormField>
 
       <template v-if="publishType === 'trade'">
@@ -308,7 +314,7 @@ async function handleSubmit() {
         </FormField>
 
         <FormField label="价格" required :error="errors.price">
-          <input v-model.number="form.price" type="number" min="0" placeholder="请输入价格" />
+          <input v-model.number="form.price" type="number" min="0" placeholder="输入转让价格（元）" />
         </FormField>
 
         <FormField label="成色" required :error="errors.condition">
@@ -345,7 +351,7 @@ async function handleSubmit() {
         </FormField>
 
         <FormField label="目标人数" required :error="errors.targetCount">
-          <input v-model.number="form.targetCount" type="number" min="2" placeholder="请输入目标人数" />
+          <input v-model.number="form.targetCount" type="number" min="2" placeholder="凑齐多少人开始拼单" />
         </FormField>
 
         <FormField label="截止时间" required :error="errors.deadline">
@@ -359,15 +365,15 @@ async function handleSubmit() {
         </FormField>
 
         <FormField label="酬劳" required :error="errors.reward">
-          <input v-model.number="form.reward" type="number" min="0" placeholder="请输入酬劳" />
+          <input v-model.number="form.reward" type="number" min="0" placeholder="输入跑腿酬劳（元）" />
         </FormField>
 
         <FormField label="取件地点" required :error="errors.from">
-          <input v-model.trim="form.from" type="text" placeholder="请输入取件地点" />
+          <input v-model.trim="form.from" type="text" placeholder="如：菜鸟驿站 3 号货架" />
         </FormField>
 
         <FormField label="送达地点" required :error="errors.to">
-          <input v-model.trim="form.to" type="text" placeholder="请输入送达地点" />
+          <input v-model.trim="form.to" type="text" placeholder="如：15 号宿舍楼 302" />
         </FormField>
 
         <FormField label="截止时间" required :error="errors.deadline">
@@ -376,7 +382,7 @@ async function handleSubmit() {
       </template>
 
       <FormField label="描述" required :error="errors.description">
-        <textarea v-model.trim="form.description" rows="5" placeholder="请简要描述具体情况"></textarea>
+        <textarea v-model.trim="form.description" rows="5" placeholder="详细描述物品情况、交易要求等"></textarea>
       </FormField>
 
       <FormField label="图片">

@@ -71,6 +71,7 @@ function prevStep() {
 }
 
 async function submitForm() {
+  if (!userStore.currentUser) return
   const newItem: TradeItem = {
     id: Date.now(),
     title: form.value.name,
@@ -82,17 +83,17 @@ async function submitForm() {
     description: form.value.description,
     location: form.value.location,
     contact: form.value.contact,
-    publisherId: userStore.currentUser.id,
-    publisherName: userStore.currentUser.name,
-    publisherAvatar: userStore.currentUser.avatar,
+    publisherId: userStore.currentUser.id!,
+    publisherName: userStore.currentUser.name!,
+    publisherAvatar: userStore.currentUser.avatar!,
     createdAt: new Date().toISOString(),
     status: 'active'
   }
   itemStore.addTradeItem(newItem)
   try {
     await http.post('/trades', newItem)
-  } catch {
-    /* json-server may not be running */
+  } catch (e) {
+    console.error(e)
   }
   ElMessage.success('发布成功')
   router.push('/')

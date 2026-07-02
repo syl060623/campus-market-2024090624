@@ -1,174 +1,156 @@
+<template>
+  <section class="auth-page">
+    <div class="auth-card">
+      <h1>登录校园轻集市</h1>
+      <p class="desc">登录后可以发布信息、收藏内容并进入个人中心。</p>
+
+      <form class="auth-form" @submit.prevent="handleLogin">
+        <FormField label="用户名" required :error="errors.username">
+          <input v-model.trim="form.username" type="text" placeholder="请输入用户名" />
+        </FormField>
+
+        <FormField label="密码" required :error="errors.password">
+          <input v-model.trim="form.password" type="password" placeholder="请输入密码" />
+        </FormField>
+
+        <p v-if="loginError" class="login-error">{{ loginError }}</p>
+
+        <button class="primary" type="submit" :disabled="submitting">
+          {{ submitting ? '登录中...' : '登录' }}
+        </button>
+      </form>
+
+      <p class="switch">
+        还没有账号？
+        <RouterLink to="/register">去注册</RouterLink>
+      </p>
+    </div>
+  </section>
+</template>
+
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { ElForm, ElFormItem, ElInput, ElButton, ElCard, ElMessage, ElDivider } from 'element-plus'
-import { User, Lock, School } from '@element-plus/icons-vue'
+
+import FormField from '../components/FormField.vue'
+import { useUserStore } from '../stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
 
+const submitting = ref(false)
+const loginError = ref('')
+
 const form = reactive({
-  phone: '',
+  username: '',
   password: '',
 })
 
-const loading = ref(false)
+const errors = reactive<Record<string, string>>({})
 
-function handleLogin() {
-  if (!form.phone.trim() || !form.password.trim()) {
-    ElMessage.warning('请填写手机号和密码')
+function clearErrors() {
+  Object.keys(errors).forEach((key) => {
+    errors[key] = ''
+  })
+  loginError.value = ''
+}
+
+function validateForm() {
+  clearErrors()
+
+  if (!form.username) {
+    errors.username = '请输入用户名'
+  }
+
+  if (!form.password) {
+    errors.password = '请输入密码'
+  }
+
+  return Object.values(errors).every((message) => !message)
+}
+
+async function handleLogin() {
+  if (!validateForm()) {
     return
   }
-  loading.value = true
+
+  submitting.value = true
+
   try {
-    userStore.login({ phone: form.phone, password: form.password })
-    ElMessage.success('登录成功')
-    router.push('/')
-  } catch {
-    ElMessage.error('登录失败，请重试')
+    await userStore.login(form.username, form.password)
+    window.alert('登录成功')
+    router.push('/user')
+  } catch (error) {
+    console.error(error)
+    loginError.value = '账号或密码错误'
   } finally {
-    loading.value = false
+    submitting.value = false
   }
 }
 </script>
 
-<template>
-  <div class="login-view">
-    <div class="login-container">
-      <div class="login-decoration">
-        <div class="decoration-content">
-          <ElIcon :size="64" color="#fff"><School /></ElIcon>
-          <h1 class="decoration-title">校园轻集市</h1>
-          <p class="decoration-desc">二手交易 · 失物招领 · 拼单搭子 · 跑腿委托</p>
-        </div>
-      </div>
-      <ElCard class="login-card" :body-style="{ padding: '40px' }">
-        <h2 class="login-title">欢迎回来</h2>
-        <p class="login-subtitle">登录你的账号</p>
-        <ElForm :model="form" label-width="0" class="login-form" @keyup.enter="handleLogin">
-          <ElFormItem>
-            <ElInput
-              v-model="form.phone"
-              placeholder="手机号"
-              size="large"
-              :prefix-icon="User"
-            />
-          </ElFormItem>
-          <ElFormItem>
-            <ElInput
-              v-model="form.password"
-              type="password"
-              placeholder="密码"
-              size="large"
-              show-password
-              :prefix-icon="Lock"
-            />
-          </ElFormItem>
-          <ElFormItem>
-            <ElButton
-              type="primary"
-              size="large"
-              :loading="loading"
-              class="login-btn"
-              @click="handleLogin"
-            >
-              登录
-            </ElButton>
-          </ElFormItem>
-        </ElForm>
-        <ElDivider>
-          <span style="color: #94A3B8; font-size: 13px;">还没有账号？</span>
-        </ElDivider>
-        <div class="register-link">
-          <ElButton text type="primary" size="large" @click="router.push('/register')">
-            立即注册
-          </ElButton>
-        </div>
-      </ElCard>
-    </div>
-  </div>
-</template>
-
 <style scoped>
-.login-view {
+.auth-page {
   min-height: calc(100vh - 120px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
 }
 
-.login-container {
-  display: flex;
+.auth-card {
+  width: 420px;
+  padding: 28px;
   border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  max-width: 800px;
+  background: #fff;
+}
+
+.auth-card h1 {
+  margin: 0 0 8px;
+}
+
+.desc {
+  margin: 0 0 20px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+input {
   width: 100%;
-}
-
-.login-decoration {
-  flex: 1;
-  background: linear-gradient(135deg, #3B82F6 0%, #14B8A6 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 48px;
-  min-height: 400px;
-}
-
-.decoration-content {
-  text-align: center;
-  color: #fff;
-}
-
-.decoration-title {
-  font-size: 28px;
-  font-weight: 800;
-  margin-top: 16px;
-  margin-bottom: 8px;
-}
-
-.decoration-desc {
+  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
   font-size: 14px;
-  opacity: 0.85;
 }
 
-.login-card {
-  width: 380px;
-  border-radius: 0;
+.login-error {
+  margin: 0;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.primary {
   border: none;
-}
-
-.login-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1E293B;
-  margin-bottom: 4px;
-}
-
-.login-subtitle {
-  font-size: 14px;
-  color: #94A3B8;
-  margin-bottom: 28px;
-}
-
-.login-form {
-  max-width: 100%;
-}
-
-.login-form :deep(.el-input__wrapper) {
   border-radius: 8px;
-}
-
-.login-btn {
-  width: 100%;
-  border-radius: 8px;
-  height: 44px;
+  padding: 11px 16px;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
   font-size: 15px;
 }
 
-.register-link {
+.primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.switch {
+  margin: 18px 0 0;
   text-align: center;
+  color: #6b7280;
 }
 </style>

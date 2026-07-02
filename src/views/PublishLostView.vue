@@ -59,6 +59,7 @@ function prevStep() {
 }
 
 function submitForm() {
+  if (!userStore.currentUser) return
   const newItem: LostFoundItem = {
     id: Date.now(),
     type: form.value.type as '丢失' | '拾到',
@@ -68,9 +69,9 @@ function submitForm() {
     location: form.value.location,
     happenedAt: form.value.happenedAt?.toISOString() || new Date().toISOString(),
     contact: form.value.contact,
-    publisherId: userStore.currentUser.id,
-    publisherName: userStore.currentUser.name,
-    publisherAvatar: userStore.currentUser.avatar,
+    publisherId: userStore.currentUser.id!,
+    publisherName: userStore.currentUser.name!,
+    publisherAvatar: userStore.currentUser.avatar!,
     createdAt: new Date().toISOString(),
     status: 'active'
   }

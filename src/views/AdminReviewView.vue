@@ -6,7 +6,7 @@ import { Select, Close, View } from '@element-plus/icons-vue'
 interface ReviewItem {
   id: number
   type: string
-  typeTag: string
+  typeTag: 'primary' | 'success' | 'warning' | 'info' | 'danger' | ''
   title: string
   publisher: string
   time: string
@@ -72,7 +72,7 @@ function filteredList(status: string): ReviewItem[] {
           <ElTable :data="filteredList('pending')" stripe style="width: 100%">
             <ElTableColumn label="类型" width="90">
               <template #default="{ row }">
-                <ElTag :type="row.typeTag || ''" size="small" effect="plain">{{ row.type }}</ElTag>
+                <ElTag :type="(row.typeTag as any)" size="small" effect="plain">{{ row.type }}</ElTag>
               </template>
             </ElTableColumn>
             <ElTableColumn prop="title" label="标题" min-width="180" show-overflow-tooltip />
@@ -81,13 +81,13 @@ function filteredList(status: string): ReviewItem[] {
             <ElTableColumn prop="preview" label="内容预览" min-width="220" show-overflow-tooltip />
             <ElTableColumn label="操作" width="220" fixed="right">
               <template #default="{ row }">
-                <ElButton type="success" size="small" @click="approve(row)">
+                <ElButton type="success" size="small" @click="approve(row as ReviewItem)">
                   <ElIcon><Select /></ElIcon> 通过
                 </ElButton>
-                <ElButton type="danger" size="small" @click="reject(row)">
+                <ElButton type="danger" size="small" @click="reject(row as ReviewItem)">
                   <ElIcon><Close /></ElIcon> 拒绝
                 </ElButton>
-                <ElButton size="small" @click="showDetail(row)">
+                <ElButton size="small" @click="showDetail(row as ReviewItem)">
                   <ElIcon><View /></ElIcon> 详情
                 </ElButton>
               </template>
@@ -98,7 +98,7 @@ function filteredList(status: string): ReviewItem[] {
           <ElTable :data="filteredList('approved')" stripe style="width: 100%">
             <ElTableColumn label="类型" width="90">
               <template #default="{ row }">
-                <ElTag :type="row.typeTag || ''" size="small" effect="plain">{{ row.type }}</ElTag>
+                <ElTag :type="(row.typeTag as any)" size="small" effect="plain">{{ row.type }}</ElTag>
               </template>
             </ElTableColumn>
             <ElTableColumn prop="title" label="标题" min-width="180" show-overflow-tooltip />
@@ -116,7 +116,7 @@ function filteredList(status: string): ReviewItem[] {
           <ElTable :data="filteredList('rejected')" stripe style="width: 100%">
             <ElTableColumn label="类型" width="90">
               <template #default="{ row }">
-                <ElTag :type="row.typeTag || ''" size="small" effect="plain">{{ row.type }}</ElTag>
+                <ElTag :type="(row.typeTag as any)" size="small" effect="plain">{{ row.type }}</ElTag>
               </template>
             </ElTableColumn>
             <ElTableColumn prop="title" label="标题" min-width="180" show-overflow-tooltip />
@@ -137,7 +137,7 @@ function filteredList(status: string): ReviewItem[] {
       <template v-if="detailItem">
         <div class="detail-field">
           <span class="detail-label">类型</span>
-          <ElTag :type="detailItem.typeTag || ''" size="small" effect="plain">{{ detailItem.type }}</ElTag>
+          <ElTag :type="(detailItem.typeTag as any)" size="small" effect="plain">{{ detailItem.type }}</ElTag>
         </div>
         <div class="detail-field">
           <span class="detail-label">标题</span>

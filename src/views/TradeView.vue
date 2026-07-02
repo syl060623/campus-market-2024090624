@@ -1,98 +1,59 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import {
-  ElBreadcrumb, ElBreadcrumbItem, ElInput, ElSelect, ElOption, ElButton, ElRow, ElCol,
-  ElCard, ElTag, ElPagination, ElAvatar, ElIcon
-} from 'element-plus'
-import { Search, Timer, Location } from '@element-plus/icons-vue'
-import type { TradeItem } from '@/types/item'
-import { useFavoriteStore } from '@/stores/favorite'
-import { useItemStore } from '@/stores/item'
-import EmptyState from '@/components/EmptyState.vue'
-import { getTrades } from '@/api/trade'
-import { formatTime } from '@/utils/format'
-import { ITEM_CATEGORIES, ITEM_CONDITIONS, LOCATIONS, TRADE_SORT_OPTIONS } from '@/utils/constants'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+import EmptyState from '../components/EmptyState.vue'
+import ErrorState from '../components/ErrorState.vue'
+import LoadingState from '../components/LoadingState.vue'
+import SearchBar from '../components/SearchBar.vue'
+import { useFavoriteStore } from '../stores/favorite'
+import { getTrades, type TradeItem } from '../api/trade'
 
 const router = useRouter()
-const route = useRoute()
 const favoriteStore = useFavoriteStore()
-const itemStore = useItemStore()
+const trades = ref<TradeItem[]>([])
+const loading = ref(false)
+const error = ref(false)
+const keyword = ref('')
 
-const items = ref<TradeItem[]>([])
-const searchQuery = ref('')
+const filteredTrades = computed(() => {
+  const value = keyword.value.trim()
 
-onMounted(async () => {
-  const q = route.query.search as string
-  if (q) searchQuery.value = q
-  items.value = [...itemStore.tradeItems]
+  if (!value) {
+    return trades.value
+  }
+
+  return trades.value.filter((item) => {
+    return (
+      item.title.includes(value) ||
+      item.category.includes(value) ||
+      item.location.includes(value) ||
+      item.description.includes(value)
+    )
+  })
+})
+
+async function loadTrades() {
+  loading.value = true
+  error.value = false
+
   try {
     const res = await getTrades()
-    const storeIds = new Set(itemStore.tradeItems.map(i => String(i.id)))
-    for (const apiItem of res.data) {
-      if (!storeIds.has(String(apiItem.id))) {
-        items.value.push(apiItem as TradeItem)
-      }
-    }
-  } catch {
-    /* already have store items as fallback */
+    trades.value = res.data
+  } catch (err) {
+    console.error(err)
+    error.value = true
+  } finally {
+    loading.value = false
   }
-})
+}
 
-watch(() => route.query.search, (q) => {
-  if (q) searchQuery.value = q as string
-})
-const categoryFilter = ref('')
-const conditionFilter = ref('')
-const locationFilter = ref('')
-const priceMin = ref<number | null>(null)
-const priceMax = ref<number | null>(null)
-const sortBy = ref('latest')
-const currentPage = ref(1)
-const pageSize = ref(8)
-
-const categoryOptions = [...ITEM_CATEGORIES]
-const conditionOptions = [...ITEM_CONDITIONS]
-const locationOptions = [...LOCATIONS]
-const sortOptions = [
-  { value: 'latest', label: '最新发布' },
-  { value: 'price-asc', label: '价格从低到高' },
-  { value: 'price-desc', label: '价格从高到低' },
-]
-
-const filteredItems = computed(() => {
-  let result = items.value.filter(item => {
-    if (searchQuery.value && !item.title.includes(searchQuery.value) && !item.description.includes(searchQuery.value)) return false
-    if (categoryFilter.value && item.category !== categoryFilter.value) return false
-    if (conditionFilter.value && item.condition !== conditionFilter.value) return false
-    if (locationFilter.value && item.location !== locationFilter.value) return false
-    if (priceMin.value !== null && item.price < priceMin.value) return false
-    if (priceMax.value !== null && item.price > priceMax.value) return false
-    return true
-  })
-  if (sortBy.value === 'price-asc') result.sort((a, b) => a.price - b.price)
-  else if (sortBy.value === 'price-desc') result.sort((a, b) => b.price - a.price)
-  else result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  return result
-})
-
-const total = computed(() => filteredItems.value.length)
-
-const pagedItems = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  return filteredItems.value.slice(start, start + pageSize.value)
-})
-
-function goToDetail(id: number | string) {
+function goDetail(id: number) {
   router.push(`/trade/${id}`)
 }
 
-function handlePageChange(page: number) {
-  currentPage.value = page
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function toggleFav(item: TradeItem) {
+function toggleFav(item: TradeItem, e: Event) {
+  e.stopPropagation()
   favoriteStore.toggleFavorite({
     id: item.id,
     type: 'trade',
@@ -101,165 +62,115 @@ function toggleFav(item: TradeItem) {
     location: item.location,
   })
 }
+
+onMounted(() => {
+  loadTrades()
+})
 </script>
 
 <template>
-  <div class="trade-view">
-    <ElBreadcrumb separator="/">
-      <ElBreadcrumbItem :to="{ path: '/' }">首页</ElBreadcrumbItem>
-      <ElBreadcrumbItem>二手交易</ElBreadcrumbItem>
-    </ElBreadcrumb>
+  <section class="page">
+    <h1>二手交易</h1>
 
-    <div class="toolbar">
-      <div class="search-row">
-        <ElInput v-model="searchQuery" placeholder="搜索二手商品..." clearable :prefix-icon="Search" class="search-input" />
-        <ElSelect v-model="categoryFilter" placeholder="分类" clearable class="filter-select">
-          <ElOption v-for="cat in categoryOptions" :key="cat" :label="cat" :value="cat" />
-        </ElSelect>
-        <ElSelect v-model="conditionFilter" placeholder="成色" clearable class="filter-select">
-          <ElOption v-for="c in conditionOptions" :key="c" :label="c" :value="c" />
-        </ElSelect>
-        <ElSelect v-model="locationFilter" placeholder="校区" clearable class="filter-select">
-          <ElOption v-for="loc in locationOptions" :key="loc" :label="loc" :value="loc" />
-        </ElSelect>
-      </div>
-      <div class="filter-row">
-        <div class="price-range">
-          <ElInput v-model.number="priceMin" placeholder="最低价" type="number" class="price-input" />
-          <span class="price-sep">—</span>
-          <ElInput v-model.number="priceMax" placeholder="最高价" type="number" class="price-input" />
+    <SearchBar
+      v-model="keyword"
+      placeholder="搜索商品标题、分类、地点或描述"
+    />
+
+    <LoadingState
+      v-if="loading"
+      text="正在加载二手交易信息..."
+    />
+
+    <ErrorState
+      v-else-if="error"
+      message="二手交易数据加载失败，请检查 Mock 服务是否正常运行。"
+      show-retry
+      @retry="loadTrades"
+    />
+
+    <EmptyState
+      v-else-if="filteredTrades.length === 0"
+      text="暂无符合条件的二手交易信息"
+    />
+
+    <div v-else class="grid">
+      <div
+        v-for="item in filteredTrades"
+        :key="item.id"
+        class="card"
+        @click="goDetail(item.id)"
+      >
+        <div class="card-image">
+          <img :src="item.images?.[0] || item.image" :alt="item.title" />
+          <span class="condition-tag">{{ item.condition }}</span>
         </div>
-        <div class="sort-group">
-          <span class="sort-label">排序：</span>
-          <ElButton v-for="opt in sortOptions" :key="opt.value" :type="sortBy === opt.value ? 'primary' : 'default'" size="small" @click="sortBy = opt.value">{{ opt.label }}</ElButton>
+
+        <div class="card-body">
+          <h3>{{ item.title }}</h3>
+
+          <div class="price-row">
+            <span class="price">¥{{ item.price }}</span>
+            <span v-if="item.originalPrice" class="original-price">¥{{ item.originalPrice }}</span>
+          </div>
+
+          <div class="meta-row">
+            <span>{{ item.category }}</span>
+            <span>{{ item.location }}</span>
+            <span>{{ item.publishTime?.slice(0, 10) }}</span>
+          </div>
+
+          <div class="card-footer">
+            <div class="publisher">
+              <img :src="item.publisherAvatar" class="avatar" />
+              <span>{{ item.publisherName }}</span>
+            </div>
+            <button
+              class="fav-btn"
+              :class="{ active: favoriteStore.isFavorite('trade', item.id) }"
+              @click="toggleFav(item, $event)"
+            >
+              {{ favoriteStore.isFavorite('trade', item.id) ? '已收藏' : '收藏' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
-
-    <ElRow :gutter="20">
-      <ElCol v-for="item in pagedItems" :key="item.id" :span="6" class="card-col">
-        <ElCard class="item-card" :body-style="{ padding: 0 }" shadow="hover" @click="goToDetail(item.id)">
-          <div class="card-image">
-            <img :src="item.images[0]" :alt="item.title" />
-          </div>
-          <div class="card-body">
-            <ElTag :type="item.condition === '全新' ? 'success' : item.condition === '九成新' ? 'primary' : 'warning'" size="small" class="condition-tag">{{ item.condition }}</ElTag>
-            <h4 class="card-title">{{ item.title }}</h4>
-            <div class="card-price">
-              <span class="price">¥{{ item.price }}</span>
-              <span class="original-price" v-if="item.originalPrice">¥{{ item.originalPrice }}</span>
-            </div>
-            <div class="card-meta">
-              <span class="meta-item"><ElIcon :size="12"><Location /></ElIcon>{{ item.location }}</span>
-              <span class="meta-item"><ElIcon :size="12"><Timer /></ElIcon>{{ formatTime(item.createdAt) }}</span>
-            </div>
-            <div class="card-footer">
-              <div class="card-publisher">
-                <ElAvatar :size="24" :src="item.publisherAvatar" />
-                <span class="publisher-name">{{ item.publisherName }}</span>
-              </div>
-              <button class="favorite-btn" @click.stop="toggleFav(item)">
-                {{ favoriteStore.isFavorite('trade', item.id) ? '已收藏' : '收藏' }}
-              </button>
-            </div>
-          </div>
-        </ElCard>
-      </ElCol>
-    </ElRow>
-
-    <div class="pagination-wrap" v-if="total > 0">
-      <ElPagination
-        v-model:current-page="currentPage"
-        :page-size="pageSize"
-        :total="total"
-        layout="prev, pager, next"
-        @current-change="handlePageChange"
-      />
-    </div>
-    <EmptyState v-else text="没有找到符合条件的商品" />
-  </div>
+  </section>
 </template>
 
 <style scoped>
-.trade-view {
+.page {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 24px 16px;
 }
 
-.toolbar {
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.card {
   background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  margin: 16px 0 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.search-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.search-input {
-  flex: 1;
-}
-
-.filter-select {
-  width: 130px;
-}
-
-.filter-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.price-range {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.price-input {
-  width: 100px;
-}
-
-.price-sep {
-  color: #94A3B8;
-}
-
-.sort-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.sort-label {
-  font-size: 13px;
-  color: #64748B;
-  margin-right: 4px;
-}
-
-.card-col {
-  margin-bottom: 20px;
-}
-
-.item-card {
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s;
+  border: 1px solid #e5e7eb;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.item-card:hover {
+.card:hover {
   transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .card-image {
   position: relative;
-  width: 100%;
   height: 180px;
   overflow: hidden;
+  background: #f9fafb;
 }
 
 .card-image img {
@@ -268,28 +179,33 @@ function toggleFav(item: TradeItem) {
   object-fit: cover;
 }
 
-.card-body {
-  padding: 12px 14px 14px;
-}
-
 .condition-tag {
-  margin-bottom: 6px;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 12px;
 }
 
-.card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1E293B;
-  margin-bottom: 8px;
+.card-body {
+  padding: 14px;
+}
+
+.card-body h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.4;
-  min-height: 39px;
+  min-height: 42px;
 }
 
-.card-price {
+.price-row {
   display: flex;
   align-items: baseline;
   gap: 6px;
@@ -299,52 +215,50 @@ function toggleFav(item: TradeItem) {
 .price {
   font-size: 18px;
   font-weight: 700;
-  color: #EF4444;
+  color: #ef4444;
 }
 
 .original-price {
   font-size: 12px;
-  color: #94A3B8;
+  color: #94a3b8;
   text-decoration: line-through;
 }
 
-.card-meta {
+.meta-row {
   display: flex;
   gap: 12px;
-  margin-bottom: 8px;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 3px;
   font-size: 12px;
-  color: #94A3B8;
+  color: #94a3b8;
+  margin-bottom: 10px;
 }
 
 .card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 8px;
-  border-top: 1px solid #F1F5F9;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
 }
 
-.card-publisher {
+.publisher {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.publisher-name {
   font-size: 12px;
-  color: #64748B;
+  color: #64748b;
 }
 
-.favorite-btn {
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.fav-btn {
   border: none;
   border-radius: 999px;
-  padding: 6px 12px;
+  padding: 5px 12px;
   cursor: pointer;
   background: #f3f4f6;
   color: #374151;
@@ -352,17 +266,8 @@ function toggleFav(item: TradeItem) {
   transition: all 0.2s;
 }
 
-.favorite-btn:hover {
-  background: #e5e7eb;
-}
-
-.pagination-wrap {
-  display: flex;
-  justify-content: center;
-  padding: 32px 0;
-}
-
-.empty-wrap {
-  padding: 60px 0;
+.fav-btn.active {
+  background: #dbeafe;
+  color: #2563eb;
 }
 </style>

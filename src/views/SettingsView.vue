@@ -17,9 +17,10 @@ const form = reactive({
 })
 
 onMounted(() => {
-  const u = userStore.currentUser
-  form.nickname = u.name
-  form.avatar = u.avatar
+  if (userStore.currentUser) {
+    form.nickname = userStore.currentUser.name
+    form.avatar = userStore.currentUser.avatar
+  }
 })
 
 function handleAvatarSuccess(res: { url?: string; data?: { url?: string } }) {
@@ -32,12 +33,6 @@ function saveSettings() {
     ElMessage.error('两次密码输入不一致')
     return
   }
-  userStore.updateProfile({
-    nickname: form.nickname,
-    phone: form.phone,
-    email: form.email,
-    avatar: form.avatar,
-  })
   if (form.oldPassword && form.newPassword) {
     form.oldPassword = ''
     form.newPassword = ''
@@ -112,18 +107,18 @@ function saveSettings() {
             <ElAvatar :size="56" :src="form.avatar" />
             <div class="info-user">
               <span class="info-name">{{ form.nickname || '未设置' }}</span>
-              <span class="info-campus">{{ userStore.currentUser.college }}</span>
+              <span class="info-campus">{{ userStore.currentUser?.college }}</span>
             </div>
           </div>
           <ElDivider />
           <div class="info-stats">
             <div class="info-row">
               <span class="info-label">学院</span>
-              <span class="info-value">{{ userStore.currentUser.college }}</span>
+              <span class="info-value">{{ userStore.currentUser?.college }}</span>
             </div>
             <div class="info-row">
               <span class="info-label">年级</span>
-              <span class="info-value">{{ userStore.currentUser.grade }}</span>
+              <span class="info-value">{{ userStore.currentUser?.grade }}</span>
             </div>
           </div>
         </ElCard>
